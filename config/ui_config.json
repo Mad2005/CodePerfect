@@ -1,0 +1,171 @@
+{
+  "app": {
+    "title": "AI Medical Coding System",
+    "description": "Intelligent clinical code generation and validation. Analyze medical documentation and generate accurate billing and diagnostic codes with AI assistance.",
+    "version": "2.0.0",
+    "port": 5000,
+    "env": "production"
+  },
+  "ui": {
+    "theme": {
+      "mode": "light",
+      "primaryColor": "#2563eb",
+      "secondaryColor": "#7c3aed",
+      "successColor": "#16a34a",
+      "warningColor": "#f59e0b",
+      "errorColor": "#dc2626",
+      "backgroundColor": "#f8fafc",
+      "surfaceColor": "#ffffff",
+      "textColor": "#0f172a",
+      "borderColor": "#e2e8f0"
+    },
+    "animation": {
+      "enabled": true,
+      "duration": "fast",
+      "processingStepDuration": 1000
+    },
+    "layout": {
+      "maxWidth": "1320px",
+      "sidebarWidth": "420px",
+      "headerHeight": "60px",
+      "borderRadius": "10px"
+    },
+    "notifications": {
+      "enabled": true,
+      "duration": 4000,
+      "position": "bottom-right"
+    }
+  },
+  "modes": {
+    "autoCoding": {
+      "label": "Auto Coding Mode",
+      "description": "Generate medical codes automatically from clinical notes. No manual code input needed.",
+      "icon": "bolt",
+      "enabled": true,
+      "steps": [
+        "Analyzing clinical notes...",
+        "Extracting clinical entities...",
+        "Generating medical codes...",
+        "Validating compliance...",
+        "Finalizing report..."
+      ]
+    },
+    "assistedCoding": {
+      "label": "Assisted Coding Mode",
+      "description": "Validate and enhance human-coded entries. Compare AI suggestions with existing codes.",
+      "icon": "check-circle",
+      "enabled": true,
+      "steps": [
+        "Analyzing clinical notes...",
+        "Processing human-coded data...",
+        "Generating AI codes...",
+        "Comparing with human codes...",
+        "Validating and enhancing...",
+        "Finalizing enhanced report..."
+      ]
+    }
+  },
+  "upload": {
+    "maxFileSize": 10485760,
+    "maxFileSizeMB": 10,
+    "allowedFormats": [
+      ".txt",
+      ".pdf",
+      ".doc",
+      ".docx",
+      ".rtf"
+    ],
+    "acceptAttribute": ".txt,.pdf,.doc,.docx,.rtf"
+  },
+  "report": {
+    "sections": [
+      {
+        "id": "summary",
+        "title": "Clinical Summary",
+        "icon": "info",
+        "enabled": true
+      },
+      {
+        "id": "diagnoses",
+        "title": "Extracted Diagnoses",
+        "icon": "check",
+        "enabled": true
+      },
+      {
+        "id": "codes",
+        "title": "Generated Codes",
+        "icon": "code",
+        "enabled": true
+      },
+      {
+        "id": "validation",
+        "title": "Validation Results",
+        "icon": "shield-check",
+        "enabled": true
+      }
+    ],
+    "export": {
+      "pdf": true,
+      "csv": false,
+      "json": false,
+      "html": true
+    }
+  },
+  "processing": {
+    "timeout": 300000,
+    "retryAttempts": 3,
+    "retryDelay": 1000
+  },
+  "api": {
+    "endpoints": {
+      "extract": "/api/extract",
+      "validate": "/api/validate",
+      "reports": "/api/reports",
+      "sample": "/api/sample",
+      "status": "/api/db-status"
+    },
+    "timeout": 60000
+  },
+  "accessibility": {
+    "enabled": true,
+    "highContrast": false,
+    "reducedMotion": false,
+    "largeText": false
+  },
+  "features": {
+    "darkMode": false,
+    "exportToCSV": false,
+    "exportToJSON": false,
+    "batchProcessing": false,
+    "userAuthentication": false,
+    "auditLogging": false,
+    "reportComparison": false,
+    "codeSearch": false
+  },
+  "samples": {
+    "enabled": true,
+    "preload": true,
+    "samples": [
+      {
+        "id": 1,
+        "title": "Diabetes + Hypertension + CKD",
+        "category": "Endocrinology"
+      },
+      {
+        "id": 2,
+        "title": "Acute Appendicitis",
+        "category": "Surgery"
+      },
+      {
+        "id": 3,
+        "title": "STEMI / 3-Vessel CAD",
+        "category": "Cardiology"
+      },
+      {
+        "id": 4,
+        "title": "Simple Pneumonia",
+        "category": "Pulmonology"
+      }
+    ]
+  }
+}
