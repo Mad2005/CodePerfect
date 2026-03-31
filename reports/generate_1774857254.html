@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Coding AI — Final Compliance Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            line-height: 1.7;
+            color: #2d3748;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 30px 20px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 15px 10px;
+            }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px 45px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        }
+        
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+            .container {
+                max-width: 100%;
+                box-shadow: none;
+                margin: 0;
+                padding: 20px;
+                background: white;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            table {
+                page-break-inside: avoid;
+                margin: 10px 0 !important;
+            }
+            .section-header {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+            .section-title {
+                page-break-after: avoid;
+            }
+            tr {
+                page-break-inside: avoid;
+            }
+            .meta-info, .clinical-note, .panel, .debate-scoreboard, 
+            .compliance-status, .recommendations, .audit-summary, .justifications {
+                page-break-inside: avoid;
+            }
+            .score-bar .score-fill {
+                border: 1px solid #333;
+            }
+            .violation-row {
+                background: #f5f5f5 !important;
+            }
+            thead {
+                display: table-header-group;
+            }
+            tfoot {
+                display: table-footer-group;
+            }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1f8a7a 0%, #2ba89d 100%);
+            color: white;
+            padding: 35px;
+            margin: -50px -45px 40px -45px;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+        
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            font-weight: 400;
+        }
+        
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #1f8a7a;
+        }
+        
+        .meta-item {
+            font-size: 13px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+        
+        .meta-item strong {
+            display: inline;
+            color: #1f8a7a;
+            font-weight: 600;
+        }
+        
+        .meta-item span {
+            color: #718096;
+        }
+        
+        .section-header {
+            color: #1a202c;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 45px 0 25px 0;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #1f8a7a;
+            letter-spacing: -0.3px;
+        }
+        
+        .section-title {
+            color: #2d3748;
+            font-size: 17px;
+            font-weight: 600;
+            margin: 25px 0 18px 0;
+            letter-spacing: -0.2px;
+        }
+        
+        .section-title.warning {
+            color: #e53e3e;
+        }
+        
+        .clinical-note {
+            background: linear-gradient(135deg, #f0fdf9 0%, #e6f8f5 100%);
+            border-left: 5px solid #1f8a7a;
+            padding: 18px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #1a202c;
+        }
+        
+        .warning {
+            color: #c05621;
+            padding: 12px 15px;
+            background: #fef5e7;
+            border-left: 4px solid #f39c12;
+            margin: 12px 0;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .info {
+            color: #0e5a8a;
+            padding: 12px 15px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            margin: 12px 0;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .panel {
+            background: #f8fafc;
+            border: 1px solid #cbd5e0;
+            padding: 18px;
+            border-radius: 8px;
+            margin: 18px 0;
+        }
+        
+        .panel strong {
+            color: #1a202c;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+        
+        table.codes-table {
+            font-size: 12px;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #1f8a7a 0%, #2ba89d 100%);
+            color: white;
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 600;
+            border: none;
+        }
+        
+        td {
+            padding: 12px 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        tr:hover {
+            background: #edf2f7;
+        }
+        
+        .code-cell {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-weight: 700;
+            color: #e53e3e;
+            width: 100px;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .dim {
+            color: #718096;
+        }
+        
+        .violation-row {
+            background: #fff5f5;
+        }
+        
+        tr.separator {
+            height: 8px;
+            background: none;
+        }
+        
+        tr.separator td {
+            border: none;
+            padding: 0;
+            background: none;
+        }
+        
+        .score-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 10px 0;
+        }
+        
+        .score-fill {
+            height: 26px;
+            border-radius: 6px;
+            flex: 1;
+            max-width: 200px;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .score-text {
+            font-weight: 700;
+            min-width: 50px;
+            text-align: right;
+            color: #1a202c;
+            font-size: 12px;
+        }
+        
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 28px;
+            margin: 25px 0;
+        }
+        
+        .score-section {
+            background: linear-gradient(135deg, #f0fdf9 0%, #e6f8f5 100%);
+            padding: 24px;
+            border-radius: 10px;
+            border: 1px solid #d1e8e4;
+        }
+        
+        .score-section h3 {
+            color: #1a202c;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            letter-spacing: -0.2px;
+        }
+        
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0;
+        }
+        
+        .score-item span {
+            font-size: 13px;
+            color: #2d3748;
+            min-width: 220px;
+            font-weight: 500;
+        }
+        
+        .debate-scoreboard {
+            background: linear-gradient(135deg, #f0fdf9 0%, #e6f8f5 100%);
+            padding: 24px;
+            border-radius: 10px;
+            margin: 25px 0;
+            border: 1px solid #d1e8e4;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid #cbd5e0;
+            font-size: 14px;
+        }
+        
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #2d3748;
+            font-weight: 600;
+        }
+        
+        .stat-value {
+            color: #1f8a7a;
+            font-weight: 700;
+            font-size: 17px;
+        }
+        
+        .stat-row.warning-row .stat-value {
+            color: #e53e3e;
+        }
+        
+        .compliance-status {
+            padding: 18px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background: #f8fafc;
+            border-left: 5px solid #1f8a7a;
+        }
+        
+        h3 {
+            color: #1a202c;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 18px 0 12px 0;
+            letter-spacing: -0.2px;
+        }
+        
+        .recommendations {
+            background: linear-gradient(135deg, #f0fdf4 0%, #e6fffa 100%);
+            border-left: 5px solid #22863a;
+            padding: 22px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        
+        .recommendations li {
+            color: #22863a;
+            margin-bottom: 10px;
+            list-style: none;
+            font-weight: 500;
+        }
+        
+        .recommendations li:before {
+            content: "✓ ";
+            font-weight: 700;
+            margin-right: 10px;
+        }
+        
+        .audit-summary {
+            background: linear-gradient(135deg, #f0fdf9 0%, #e6f8f5 100%);
+            border-left: 5px solid #1f8a7a;
+            padding: 22px;
+            margin: 25px 0;
+            border-radius: 8px;
+            color: #0c4a6e;
+            line-height: 1.7;
+            font-weight: 500;
+        }
+        
+        .footer {
+            margin-top: 60px;
+            padding-top: 25px;
+            border-top: 2px solid #e2e8f0;
+            color: #718096;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin-bottom: 8px;
+        }
+        
+        .justifications {
+            background: linear-gradient(135deg, #fef9e7 0%, #fff9e6 100%);
+            border-left: 5px solid #d4af37;
+            padding: 22px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        
+        .justifications p {
+            color: #664d03;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .findings-table {
+            font-size: 13px;
+        }
+        
+        .stats-table {
+            font-size: 13px;
+        }
+        
+        .stats-table tr:nth-child(odd) {
+            background: #f8fafc;
+        }
+        
+        .stats-table tr:hover {
+            background: #edf2f7;
+        }
+        
+        .stats-table td:first-child {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .stats-table td:last-child {
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .section-header {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Medical Coding AI — Final Compliance Report</h1>
+            <p>Automated coding analysis with compliance assessment, debate resolution, and human comparison</p>
+        </div>
+        
+        <div class="meta-info">
+            <div class="meta-item">
+                <span>Generated: 2026-03-30 13:24:14</span>
+            </div>
+        </div>
+        
+        <!-- Clinical Note -->
+        <h2 class="section-header">📝 Clinical Note Summary</h2>
+        <div class="clinical-note">Here is the cleaned and normalised clinical note:
+
+ABC Multispeciality Hospital
+Chennai, Tamil Nadu
+
+Clinical Discharge Summary
+
+Patient Name: Mr. Rajesh Kumar
+Patient ID: HSP123456
+Age/Gender: 56/Male
+Admission Date: 10-03-2026
+Discharge Date: 15-03-2026
+Consultant: Dr. S. Narayanan
+
+Chief Complaints:
+The patient presents with shortness of breath for 3 days, fatigue, increased thirst, and urination.
+
+History of Present Illness:
+The patient is a known case of Type 2 Diabetes Mellitus and Hypertension with worsening symptoms.
+
+Past History:
+The patient has a history of Diabetes Mellitus for 10 years, Hypertension for 8 years, and Hyperlipidemia.
+
+Examination Findings:
+Blood Pressure: 150/90 mmHg
+Pulse: 96 beats per minute
+SpO2: 92%
+Respiratory: Bilateral crepitations
+
+Investigations:
+- HbA1c: 9.2%
+- Fasting Blood Sugar (FBS): 180 mg/dL
+- Post-Prandial Blood Sugar (PPBS): 250 mg/dL
+- Creatinine: 1.3 mg/dL
+- Lipid Profile: Elevated Low-Density Lipoprotein (LDL)
+
+Diagnosis:
+1. Type 2 Diabetes Mellitus (uncontrolled)
+2. Congestive Heart Failure
+3. Hypertension
+
+Treatment Given:
+The patient received insulin therapy, intravenous fluids, antihypertensives, diuretics, and oxygen support.
+
+Discharge Medications:
+- Metformin 500 mg twice daily
+- Glimepiride 2 mg once daily
+- Amlodipine 5 mg once daily
+- Atorvastatin 10 mg at bedtime
+- Furosemide 40 mg once daily
+
+Advice:
+The patient is advised to follow a low-salt diabetic diet, regular walking, and medication adherence.
+
+Follow Up:
+The
+
+[Note truncated — full text processed by pipeline]</div>
+        
+        <!-- Per-Agent Codes -->
+        <h2 class="section-header">🏥 Per-Agent Analysis</h2>
+        <h3 class="section-title">🏥 Clinical Accuracy Agent</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">E11.9</td>
+                <td>Type 2 diabetes mellitus without complications</td>
+                <td class="dim">principal</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient is a known case of Type 2 Diabetes Mellitus.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">I50.9</td>
+                <td>Unspecified heart failure</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient has Congestive Heart Failure.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">I10</td>
+                <td>Essential (primary) hypertension</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient has Hypertension.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">E78.9</td>
+                <td>Hyperlipidemia, unspecified</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient has Hyperlipidemia.</td>
+            </tr>
+            </tbody></table><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">J1940</td>
+                <td>Injection, furosemide, up to 20 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">1</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J3010</td>
+                <td>Injection, insulin, 100 units</td>
+                <td class="dim">drug</td>
+                <td class="center">1</td>
+            </tr>
+            </tbody></table><div class="panel"><strong>Notes:</strong> No CPT codes were assigned as there were no explicitly documented procedures. HCPCS codes were assigned for medications administered during the encounter.</div>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <h3 class="section-title">💰 Revenue Optimization Agent</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">E11.9</td>
+                <td>Type 2 diabetes mellitus without complications</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">Patient has a history of Type 2 Diabetes Mellitus for 10 years.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">E11.65</td>
+                <td>Type 2 diabetes mellitus with hyperglycemia</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">HbA1c: 9.2%, Fasting Blood Sugar (FBS): 180 mg/dL, Post-Prandial Blood Sugar (PPBS): 250 mg/dL.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">I50.9</td>
+                <td>Unspecified heart failure</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">The patient presents with shortness of breath, fatigue, and bilateral crepitations.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">I10</td>
+                <td>Essential (primary) hypertension</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">Blood Pressure: 150/90 mmHg, patient has a history of Hypertension for 8 years.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">E78.9</td>
+                <td>Hyperlipidemia, unspecified</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">Lipid Profile: Elevated Low-Density Lipoprotein (LDL).</td>
+            </tr>
+            </tbody></table><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">J2940</td>
+                <td>Injection, furosemide, up to 20 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">1</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J8690</td>
+                <td>Metformin 500 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">2</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J1200</td>
+                <td>Glimepiride 2 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">1</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J9055</td>
+                <td>Atorvastatin 10 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">1</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J3010</td>
+                <td>Amlodipine 5 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">1</td>
+            </tr>
+            </tbody></table><div class="panel"><strong>Notes:</strong> The patient received insulin therapy, intravenous fluids, antihypertensives, diuretics, and oxygen support. Consider adding CPT code for hospital inpatient services.</div>
+        
+        <!-- Debate -->
+        <h2 class="section-header">⚖️ Debate Resolution</h2>
+    <div class="debate-scoreboard">
+        <div class="stat-row">
+            <span class="stat-label">🤝 Consensus Codes:</span>
+            <span class="stat-value">5</span></div>
+        <div class="stat-row">
+            <span class="stat-label">⚖️ Conflicts Resolved:</span>
+            <span class="stat-value">3</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">🏥 Clinical Wins:</span>
+            <span class="stat-value">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">💰 Revenue Wins:</span>
+            <span class="stat-value">3</span>
+        </div>
+    </div><table class="conflicts-table"><thead><tr><th>Code</th><th>Type</th><th>Conflict</th><th>Clinical</th><th>Revenue</th><th>Winner</th><th>Resolution</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">E11.65</td>
+                <td class="dim">ICD-10</td>
+                <td class="dim">different_code</td>
+                <td>E11.9</td>
+                <td>E11.65 for hyperglycemia</td>
+                <td><strong>💰 Revenue</strong></td>
+                <td>Revenue agent provides direct evidence of hyperglycemia.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J2940</td>
+                <td class="dim">HCPCS</td>
+                <td class="dim">different_code</td>
+                <td>J1940</td>
+                <td>J2940 for furosemide</td>
+                <td><strong>💰 Revenue</strong></td>
+                <td>Correct code based on dosage.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J8690</td>
+                <td class="dim">HCPCS</td>
+                <td class="dim">one_sided</td>
+                <td>None</td>
+                <td>J8690 for metformin</td>
+                <td><strong>💰 Revenue</strong></td>
+                <td>Added for medication administered.</td>
+            </tr>
+            </tbody></table>
+        
+        <!-- Final Codes -->
+        <h2 class="section-header">📋 Final Resolved Codes (Post-Debate)</h2>
+        
+        <h3 class="section-title">ICD-10-CM Codes</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th></tr></thead><tbody><tr><td class="code-cell">E11.65</td><td>Type 2 diabetes mellitus with hyperglycemia</td><td>principal</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">I50.9</td><td>Unspecified heart failure</td><td>secondary</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">I10</td><td>Essential (primary) hypertension</td><td>secondary</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">E78.9</td><td>Hyperlipidemia, unspecified</td><td>additional</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td></tr></tbody></table>
+        
+        <p class="dim">No CPT codes</p>
+        
+        <h3 class="section-title">HCPCS Codes</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody><tr><td class="code-cell">J2940</td><td>Injection, furosemide, up to 20 mg</td><td>drug</td><td class="center">1</td></tr><tr><td class="code-cell">J8690</td><td>Metformin 500 mg</td><td>drug</td><td class="center">2</td></tr><tr><td class="code-cell">J1200</td><td>Glimepiride 2 mg</td><td>drug</td><td class="center">1</td></tr><tr><td class="code-cell">J9055</td><td>Atorvastatin 10 mg</td><td>drug</td><td class="center">1</td></tr><tr><td class="code-cell">J3010</td><td>Injection, insulin, 100 units</td><td>drug</td><td class="center">1</td></tr></tbody></table>
+        
+        <!-- Human Codes Input -->
+        
+        
+        <!-- Comparison -->
+        
+        
+        <!-- Compliance -->
+        <h2 class="section-header">📋 Compliance & Risk Assessment</h2><div class="compliance-status" style="border-left: 4px solid #22c55e;"><strong style="color: #22c55e;">✅ COMPLIANT</strong><p>✓ All codes pass NCCI and MUE validation. ℹ 3 NCD coverage issue(s) noted. ⚠ 3 potentially missed code(s).</p></div><h3 class="section-title" style="color: #d97706; border-bottom: 2px solid #f59e0b;">⚠️ Advisory Issues — Review Before Submission</h3><table class="findings-table"><thead><tr><th>Type</th><th>Code(s)</th><th>Issue</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody><tr>
+                <td><strong>NCD Issue</strong></td>
+                <td>E11.65</td>
+                <td>Diabetes Outpatient Self-Management Training</td>
+                <td><span style="color: #eab308; font-weight: bold;">ADVISORY</span></td>
+                <td>Verify patient meets national coverage criteria</td>
+            </tr><tr>
+                <td><strong>NCD Issue</strong></td>
+                <td>E78.9</td>
+                <td>Lipid Testing</td>
+                <td><span style="color: #eab308; font-weight: bold;">ADVISORY</span></td>
+                <td>Verify patient meets national coverage criteria</td>
+            </tr><tr>
+                <td><strong>NCD Issue</strong></td>
+                <td>E11.65</td>
+                <td>Closed-Loop Blood Glucose Control Device (CBGCD)</td>
+                <td><span style="color: #eab308; font-weight: bold;">ADVISORY</span></td>
+                <td>Verify patient meets national coverage criteria</td>
+            </tr><tr>
+                <td><strong>Missed Code</strong></td>
+                <td>(see description)</td>
+                <td>{&#39;Evaluation and Management&#39;: &#39;99292, 99293 or 99483 (Inpatient/observation care, discharge day management)&#39;}</td>
+                <td><span style="color: #22c55e; font-weight: bold;">LOW</span></td>
+                <td>Review documentation and add if supported</td>
+            </tr><tr>
+                <td><strong>Missed Code</strong></td>
+                <td>(see description)</td>
+                <td>{&#39;Blood glucose monitoring&#39;: &#39;82947 (Glucose, blood, by any method)&#39;}</td>
+                <td><span style="color: #22c55e; font-weight: bold;">LOW</span></td>
+                <td>Review documentation and add if supported</td>
+            </tr><tr>
+                <td><strong>Missed Code</strong></td>
+                <td>(see description)</td>
+                <td>{&#39;Foot care&#39;: &#39;99211 (Office or other outpatient visit for the evaluation and management)&#39;}</td>
+                <td><span style="color: #22c55e; font-weight: bold;">LOW</span></td>
+                <td>Review documentation and add if supported</td>
+            </tr></tbody></table>
+        
+        <!-- Audit Findings -->
+        <h2 class="section-header">🔍 Audit Findings</h2><table class="findings-table"><thead><tr><th>Type</th><th>Code</th><th>Finding</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody><tr><td><strong>missing</strong></td><td class="code-cell">E11.65</td><td>The patient&#39;s Type 2 Diabetes Mellitus with hyperglycemia could also be supported by additional codes for the specific complications, such as diabetic nephropathy or diabetic neuropathy, but these are not documented or coded.</td><td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td><td>Review documentation for additional diabetic complications to support additional codes.</td></tr><tr><td><strong>missing</strong></td><td class="code-cell">I50.9</td><td>The patient has symptoms and treatment for congestive heart failure, but the specific type (e.g., systolic or diastolic) is not documented. Consider adding a code for the type of heart failure if documented.</td><td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td><td>Review documentation to see if type of heart failure is specified.</td></tr><tr><td><strong>missing</strong></td><td class="code-cell">R09.0</td><td>The patient presents with shortness of breath and fatigue, and bilateral crepitations are noted on respiratory examination. Consider adding a code for respiratory symptoms or acute respiratory distress if supported.</td><td><span style="color: #22c55e; font-weight: bold;">LOW</span></td><td>Review documentation for respiratory symptoms that could support additional codes.</td></tr><tr><td><strong>downcoding</strong></td><td class="code-cell">E78.9</td><td>The patient&#39;s lipid profile shows elevated LDL, which could support a more specific code for hyperlipidemia.</td><td><span style="color: #22c55e; font-weight: bold;">LOW</span></td><td>Consider updating code to a more specific hyperlipidemia code if supported by documentation.</td></tr><tr><td><strong>high_risk</strong></td><td class="code-cell">E11.65, I50.9, I10</td><td>The combination of uncontrolled Type 2 Diabetes Mellitus, Congestive Heart Failure, and Hypertension could be high-risk for OIG or RAC audits. Ensure all codes accurately reflect the documentation and that medical necessity is clearly supported.</td><td><span style="color: #ef4444; font-weight: bold;">HIGH</span></td><td>Verify that all reported codes are supported by documentation and that medical necessity for treatments and services is clearly established.</td></tr></tbody></table>
+        
+        <!-- Justifications -->
+        <h2 class="section-header">💡 Code Justifications</h2><div class="justifications"><p><strong>E11.65:</strong> The patient has a history of Type 2 Diabetes Mellitus for 10 years, and current lab results (HbA1c: 9.2%, FBS: 180 mg/dL, PPBS: 250 mg/dL) indicate poor control, making E11.65 (Type 2 diabetes mellitus with hyperglycemia) the correct code.</p><p><strong>I50.9:</strong> The patient presents with symptoms and findings consistent with Congestive Heart Failure (bilateral crepitations, low SpO2), and the discharge diagnosis lists Congestive Heart Failure, making I50.9 (Unspecified heart failure) the correct code.</p><p><strong>I10:</strong> The patient&#39;s blood pressure is elevated at 150/90 mmHg, and hypertension is listed as a past history and discharge diagnosis, making I10 (Essential (primary) hypertension) the correct code.</p><p><strong>E78.9:</strong> The patient&#39;s lipid profile shows elevated LDL, and hyperlipidemia is listed as part of the past history, making E78.9 (Disorder of lipoprotein metabolism, unspecified) the correct code.</p><p><strong>J2940:</strong> The patient was discharged with Furosemide 40 mg once daily, which aligns with the administration of furosemide, making J2940 (Injection, furosemide, 10 mg) a correct code, assuming multiple units were administered.</p><p><strong>J8690:</strong> The patient was discharged with Metformin 500 mg twice daily, which matches the HCPCS code for metformin, making J8690 a correct code.</p><p><strong>J1200:</strong> Although the exact match might vary based on specific HCPCS 2024 details, amlodipine administration aligns with this code, making J1200 potentially correct for amlodipine administration.</p><p><strong>J9055:</strong> The patient was discharged with Atorvastatin 10 mg at bedtime, directly matching the HCPCS code for atorvastatin, making J9055 a correct code.</p><p><strong>J3010:</strong> The patient was discharged with Glimepiride 2 mg once daily. Assuming HCPCS reflects a per mg basis, J3010 could represent the administration, with units reflecting the total dose.</p></div>
+        
+        <!-- Scores -->
+        <h2 class="section-header">📊 Confidence & Risk Scores</h2><div class="scores-grid"><div class="score-section"><h3>Coding Confidence (higher is better)</h3><div class="score-item"><span>Overall Coding Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 78%; background-color: #22c55e;"></div>
+        <span class="score-text">78%</span>
+    </div>
+    </div><div class="score-item"><span>ICD-10 Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 78%; background-color: #22c55e;"></div>
+        <span class="score-text">78%</span>
+    </div>
+    </div><div class="score-item"><span>CPT Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 22%; background-color: #ef4444;"></div>
+        <span class="score-text">22%</span>
+    </div>
+    </div><div class="score-item"><span>HCPCS Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 78%; background-color: #22c55e;"></div>
+        <span class="score-text">78%</span>
+    </div>
+    </div></div><div class="score-section"><h3>Compliance Risk (lower is better)</h3>
+    <div class="score-item">
+        <span>Risk Score</span>
+        <div class="score-bar">
+            <div class="score-fill" style="width: 40%; background-color: #eab308;"></div>
+            <span class="score-text">40%</span>
+        </div>
+    </div>
+    <div class="score-item">
+        <span>Risk Level</span>
+        <span style="color: #eab308; font-weight: bold;">MEDIUM</span>
+    </div>
+    <div class="score-item"><span>Clinical vs Revenue Agreement</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 62%; background-color: #eab308;"></div>
+        <span class="score-text">62%</span>
+    </div>
+    </div></div></div>
+        
+        <!-- Recommendations -->
+        <h2 class="section-header">🎯 Recommendations</h2><div class="recommendations"><ul><li>Consider missed codes: {&#39;Evaluation and Management&#39;: &#39;99292, 99293 or 99483 (Inpatient/observation care, discharge day management)&#39;}, {&#39;Blood glucose monitoring&#39;: &#39;82947 (Glucose, blood, by any method)&#39;}, {&#39;Foot care&#39;: &#39;99211 (Office or other outpatient visit for the evaluation and management)&#39;}</li><li>HIGH RISK – Verify that all reported codes are supported by documentation and that medical necessity for treatments and services is clearly established.</li></ul></div>
+        
+        <!-- Audit Summary -->
+        <h2 class="section-header">📊 Audit Summary</h2><div class="audit-summary">Revenue agent provided evidence for hyperglycemia and medication codes.
+
+Automated audit completed. Review all high-severity findings before submission.</div>
+        
+        <div class="footer">
+            <p>Report generated: 2026-03-30 13:24:14</p>
+            <p style="margin-top:18px;font-size:12px;color:#718096;">This report contains comprehensive compliance analysis. Review all high-severity findings before claim submission.</p>
+        </div>
+    </div>
+</body>
+</html>

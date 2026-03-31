@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Coding AI — Final Compliance Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #f9fafb;
+            padding: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+            .container {
+                max-width: 100%;
+                box-shadow: none;
+                margin: 0;
+                padding: 20px;
+                background: white;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            table {
+                page-break-inside: avoid;
+                margin: 10px 0 !important;
+            }
+            .section-header {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+            .section-title {
+                page-break-after: avoid;
+            }
+            tr {
+                page-break-inside: avoid;
+            }
+            .meta-info, .clinical-note, .panel, .debate-scoreboard, 
+            .compliance-status, .recommendations, .audit-summary, .justifications {
+                page-break-inside: avoid;
+            }
+            .score-bar .score-fill {
+                border: 1px solid #333;
+            }
+            .violation-row {
+                background: #f5f5f5 !important;
+            }
+            thead {
+                display: table-header-group;
+            }
+            tfoot {
+                display: table-footer-group;
+            }
+        }
+        
+        .header {
+            border-bottom: 3px solid #0891b2;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #0891b2;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .meta-info {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+            padding: 15px 0;
+        }
+        
+        .meta-item {
+            font-size: 13px;
+            color: #6b7280;
+        }
+        
+        .meta-item strong {
+            display: none;
+        }
+        
+        .meta-item span {
+            color: #6b7280;
+        }
+        
+        .section-header {
+            color: #1f2937;
+            font-size: 22px;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .section-title {
+            color: #374151;
+            font-size: 18px;
+            margin: 20px 0 15px 0;
+            font-weight: 600;
+        }
+        
+        .section-title.warning {
+            color: #dc2626;
+        }
+        
+        .clinical-note {
+            background: #eff6ff;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #1e3a8a;
+        }
+        
+        .warning {
+            color: #d97706;
+            padding: 10px;
+            background: #fef3c7;
+            border-left: 3px solid #f59e0b;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .info {
+            color: #0369a1;
+            padding: 10px;
+            background: #e0f2fe;
+            border-left: 3px solid #0284c7;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .panel {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        .panel strong {
+            color: #374151;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+        
+        table.codes-table {
+            font-size: 12px;
+        }
+        
+        th {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #d1d5db;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        .code-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #dc2626;
+            width: 100px;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .dim {
+            color: #6b7280;
+        }
+        
+        .violation-row {
+            background: #fef2f2;
+        }
+        
+        tr.separator {
+            height: 8px;
+            background: #f3f4f6;
+        }
+        
+        tr.separator td {
+            border: none;
+            padding: 0;
+            background: #f3f4f6;
+        }
+        
+        .score-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+        
+        .score-fill {
+            height: 24px;
+            border-radius: 4px;
+            flex: 1;
+            max-width: 200px;
+            position: relative;
+        }
+        
+        .score-text {
+            font-weight: bold;
+            min-width: 45px;
+            text-align: right;
+            color: #374151;
+            font-size: 12px;
+        }
+        
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin: 20px 0;
+        }
+        
+        .score-section {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 6px;
+        }
+        
+        .score-section h3 {
+            color: #374151;
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .score-item span {
+            font-size: 13px;
+            color: #4b5563;
+            min-width: 200px;
+        }
+        
+        .debate-scoreboard {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+        
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #374151;
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            color: #0891b2;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .stat-row.warning-row .stat-value {
+            color: #dc2626;
+        }
+        
+        .compliance-status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+            background: #f9fafb;
+        }
+        
+        h3 {
+            color: #374151;
+            font-size: 16px;
+            margin: 15px 0 10px 0;
+        }
+        
+        .recommendations {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .recommendations li {
+            color: #15803d;
+            margin-bottom: 8px;
+            list-style: none;
+        }
+        
+        .recommendations li:before {
+            content: "✓ ";
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .audit-summary {
+            background: #eff6ff;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            color: #0c4a6e;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .justifications {
+            background: #fef9e7;
+            border-left: 4px solid #eab308;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .justifications p {
+            color: #664d03;
+            margin-bottom: 8px;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .section-header {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Medical Coding AI — Final Compliance Report</h1>
+            <p>Automated coding analysis with compliance assessment, debate resolution, and human comparison</p>
+        </div>
+        
+        <div class="meta-info">
+            <div class="meta-item">
+                <span>Generated: 2026-03-28 11:54:55</span>
+            </div>
+        </div>
+        
+        <!-- Clinical Note -->
+        <h2 class="section-header">📝 Clinical Note Summary</h2>
+        <div class="clinical-note">Fire burn and infections.</div>
+        
+        <!-- Per-Agent Codes -->
+        <h2 class="section-header">🏥 Per-Agent Analysis</h2>
+        <h3 class="section-title">🏥 Clinical Accuracy Agent</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">T30.0XXA</td>
+                <td>Burn of unspecified body region, initial encounter</td>
+                <td class="dim">principal</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The clinical note mentions &#39;Fire burn&#39; and no specific site is given, so T30.0XXA is the most approp</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">A41.9</td>
+                <td>Bacterial infection, unspecified</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">The note mentions &#39;infections&#39; but does not specify the type or site, so A41.9 is used as it is a co</td>
+            </tr>
+            </tbody></table><div class="panel"><strong>Notes:</strong> No CPT or HCPCS codes were assigned as there was no documentation of procedures or services provided. ICD-10 codes were chosen based on the information given in the clinical note.</div>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <h3 class="section-title">💰 Revenue Optimization Agent</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">T30.0XXA</td>
+                <td>Burn of unspecified body region, initial encounter</td>
+                <td class="dim">principal</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">Fire burn documented in the note, and T30.0XXA is a suitable code for an initial encounter with a bu</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">A41.9</td>
+                <td>Bacterial infection, unspecified</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 70%; background-color: #eab308;"></div>
+        <span class="score-text">70%</span>
+    </div>
+    </td>
+                <td class="dim">Infections documented in the note, and A41.9 is a suitable code for an unspecified bacterial infecti</td>
+            </tr>
+            </tbody></table><div class="panel"><strong>Notes:</strong> No procedures, medications, or supplies were documented in the note. The focus was on coding the diagnoses of fire burn and infections.</div>
+        
+        <!-- Debate -->
+        <h2 class="section-header">⚖️ Debate Resolution</h2>
+    <div class="debate-scoreboard">
+        <div class="stat-row">
+            <span class="stat-label">🤝 Consensus Codes:</span>
+            <span class="stat-value">2</span></div>
+        <div class="stat-row">
+            <span class="stat-label">⚖️ Conflicts Resolved:</span>
+            <span class="stat-value">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">🏥 Clinical Wins:</span>
+            <span class="stat-value">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">💰 Revenue Wins:</span>
+            <span class="stat-value">0</span>
+        </div>
+    </div>
+        
+        <!-- Final Codes -->
+        <h2 class="section-header">📋 Final Resolved Codes (Post-Debate)</h2>
+        
+        <h3 class="section-title">ICD-10-CM Codes</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th></tr></thead><tbody><tr><td class="code-cell">T30.0XXA</td><td>Burn of unspecified body region, initial encounter</td><td>principal</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">A41.9</td><td>Bacterial infection, unspecified</td><td>secondary</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td></tr></tbody></table>
+        
+        <p class="dim">No CPT codes</p>
+        
+        <p class="dim">No HCPCS codes</p>
+        
+        <!-- Human Codes Input -->
+        
+        
+        <!-- Comparison -->
+        
+        
+        <!-- Compliance -->
+        <h2 class="section-header">📋 Compliance & Risk Assessment</h2><div class="compliance-status" style="border-left: 4px solid #22c55e;"><strong style="color: #22c55e;">✅ COMPLIANT</strong><p>✓ All codes pass NCCI and MUE validation. ℹ 1 LCD coverage issue(s) noted. ⚠ 3 potentially missed code(s).</p></div>
+        
+        <!-- Audit Findings -->
+        <h2 class="section-header">🔍 Audit Findings</h2><table class="findings-table"><thead><tr><th>Type</th><th>Code</th><th>Finding</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody><tr><td><strong>missing</strong></td><td class="code-cell"></td><td>The documentation mentions &#39;fire burn and infections&#39; but only T30.0XXA and A41.9 are coded. No CPT codes are assigned. Consider adding CPT codes for any procedures or services provided.</td><td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td><td>Review documentation for any procedures or services provided and assign relevant CPT codes.</td></tr><tr><td><strong>missing</strong></td><td class="code-cell"></td><td>The documentation mentions &#39;fire burn&#39; but the extent, location, or severity of the burn is not specified. Consider adding codes for any associated conditions or complications.</td><td><span style="color: #22c55e; font-weight: bold;">LOW</span></td><td>Review documentation for any associated conditions or complications and assign relevant ICD-10 codes.</td></tr><tr><td><strong>high_risk</strong></td><td class="code-cell">T30.0XXA, A41.9</td><td>The combination of burn and infection codes may trigger OIG or RAC audit risk. Burns and infections can have high-risk complications.</td><td><span style="color: #ef4444; font-weight: bold;">HIGH</span></td><td>Verify documentation supports the coded conditions and ensure proper sequencing.</td></tr><tr><td><strong>downcoding</strong></td><td class="code-cell">A41.9</td><td>The documentation mentions &#39;infections&#39; but the specific type of infection is not specified. Consider adding more specific codes if available.</td><td><span style="color: #22c55e; font-weight: bold;">LOW</span></td><td>Review documentation for any specific type of infection and assign relevant ICD-10 codes.</td></tr></tbody></table>
+        
+        <!-- Justifications -->
+        <h2 class="section-header">💡 Code Justifications</h2><div class="justifications"><p><strong>T30.0XXA:</strong> T30.0XXA is the correct code for a burn due to fire, initial encounter. The &#39;XXA&#39; denotes an initial encounter for a burn, with the &#39;T30.0&#39; specifically identifying the burn condition.</p><p><strong>A41.9:</strong> A41.9 is the correct code for an unspecified bacterial infection. This code is used when the type of bacterial infection is not specified.</p></div>
+        
+        <!-- Scores -->
+        <h2 class="section-header">📊 Confidence & Risk Scores</h2><div class="scores-grid"><div class="score-section"><h3>Coding Confidence (higher is better)</h3><div class="score-item"><span>Overall Coding Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 91%; background-color: #22c55e;"></div>
+        <span class="score-text">91%</span>
+    </div>
+    </div><div class="score-item"><span>ICD-10 Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 91%; background-color: #22c55e;"></div>
+        <span class="score-text">91%</span>
+    </div>
+    </div><div class="score-item"><span>CPT Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 30%; background-color: #ef4444;"></div>
+        <span class="score-text">30%</span>
+    </div>
+    </div><div class="score-item"><span>HCPCS Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </div></div><div class="score-section"><h3>Compliance Risk (lower is better)</h3>
+    <div class="score-item">
+        <span>Risk Score</span>
+        <div class="score-bar">
+            <div class="score-fill" style="width: 36%; background-color: #22c55e;"></div>
+            <span class="score-text">36%</span>
+        </div>
+    </div>
+    <div class="score-item">
+        <span>Risk Level</span>
+        <span style="color: #22c55e; font-weight: bold;">LOW</span>
+    </div>
+    <div class="score-item"><span>Clinical vs Revenue Agreement</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </div></div></div>
+        
+        <!-- Recommendations -->
+        <h2 class="section-header">🎯 Recommendations</h2><div class="recommendations"><ul><li>Consider missed codes: {&#39;description&#39;: &#39;Burn dressing and care&#39;, &#39;suggested_code&#39;: &#39;A dressing application and/or debridement (per session) HCPCS: 99211-99215, 12001-12007&#39;}, {&#39;description&#39;: &#39;Wound care and management&#39;, &#39;suggested_code&#39;: &#39;HCPCS: 97597, 97602&#39;}, {&#39;description&#39;: &#39;Antibiotic therapy for bacterial infection&#39;, &#39;suggested_code&#39;: &#39;HCPCS: Q-code for antibiotics e.g. Q5111, Q5120&#39;}</li><li>HIGH RISK – Verify documentation supports the coded conditions and ensure proper sequencing.</li></ul></div>
+        
+        <!-- Audit Summary -->
+        <h2 class="section-header">📊 Audit Summary</h2><div class="audit-summary">Both agents agreed on ICD-10 codes T30.0XXA and A41.9 with no conflicts or upgrades proposed
+
+Automated audit completed. Review all high-severity findings before submission.</div>
+        
+        <div class="footer">
+            <p>Medical Coding AI System | Powered by Llama 4 Scout + LangGraph + ChromaDB</p>
+            <p>Report generated: 2026-03-28 11:54:55</p>
+            <p style="margin-top:20px;font-size:11px;color:#9ca3af;">This report contains comprehensive compliance analysis. Review all high-severity findings before claim submission.</p>
+        </div>
+    </div>
+</body>
+</html>

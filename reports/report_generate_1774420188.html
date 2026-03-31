@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Medical Coding Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0a0e1a;
+    --surface:  #111827;
+    --surface2: #1f2937;
+    --border:   #2d3748;
+    --text:     #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent:   #38bdf8;
+    --accent2:  #818cf8;
+    --green:    #4ade80;
+    --yellow:   #facc15;
+    --red:      #f87171;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-body);
+          font-size:14px; line-height:1.6; }
+
+  /* ── Layout ── */
+  .shell { display:flex; min-height:100vh; }
+  nav { width:240px; min-width:240px; background:var(--surface);
+         border-right:1px solid var(--border); padding:24px 0;
+         position:sticky; top:0; height:100vh; overflow-y:auto; }
+  nav h1 { font-family:var(--font-mono); font-size:12px; color:var(--accent);
+             letter-spacing:0.1em; text-transform:uppercase;
+             padding:0 20px 16px; border-bottom:1px solid var(--border); }
+  nav a { display:block; padding:8px 20px; color:var(--text-dim); text-decoration:none;
+            font-size:12px; transition:all 0.15s; border-left:2px solid transparent; }
+  nav a:hover, nav a.active { color:var(--accent); border-left-color:var(--accent);
+                                background:rgba(56,189,248,0.05); }
+  nav .nav-group { margin-top:16px; }
+  nav .nav-group-title { padding:8px 20px 4px; font-size:10px; text-transform:uppercase;
+                           letter-spacing:0.1em; color:var(--text-dim); }
+  main { flex:1; padding:32px 40px; max-width:1400px; }
+
+  /* ── Header ── */
+  .report-header { margin-bottom:32px; padding-bottom:24px;
+                    border-bottom:1px solid var(--border); }
+  .report-header h2 { font-size:22px; font-weight:600; color:var(--text);
+                        font-family:var(--font-mono); }
+  .report-meta { margin-top:8px; color:var(--text-dim); font-size:12px; }
+  .report-meta span { margin-right:24px; }
+
+  /* ── Sections ── */
+  section { margin-bottom:40px; scroll-margin-top:24px; }
+  section h3 { font-size:13px; font-weight:600; text-transform:uppercase;
+                letter-spacing:0.08em; color:var(--accent); margin-bottom:16px;
+                padding-bottom:8px; border-bottom:1px solid var(--border);
+                font-family:var(--font-mono); }
+  section h4 { font-size:12px; font-weight:500; color:var(--text-dim);
+                margin:16px 0 8px; text-transform:uppercase; letter-spacing:0.05em; }
+
+  /* ── Agent tabs ── */
+  .agent-tabs { display:flex; gap:0; margin-bottom:0; border-bottom:1px solid var(--border); }
+  .agent-tab { padding:10px 20px; font-size:12px; font-weight:500; cursor:pointer;
+                color:var(--text-dim); border-bottom:2px solid transparent;
+                transition:all 0.15s; user-select:none; }
+  .agent-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .agent-pane { display:none; padding-top:16px; }
+  .agent-pane.active { display:block; }
+
+  /* ── Tables ── */
+  .data-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:16px; }
+  .data-table th { background:var(--surface2); color:var(--text-dim); font-weight:500;
+                    text-align:left; padding:8px 12px; font-size:11px; letter-spacing:0.05em;
+                    text-transform:uppercase; border-bottom:1px solid var(--border); }
+  .data-table td { padding:8px 12px; border-bottom:1px solid var(--border);
+                    vertical-align:top; color:var(--text); }
+  .data-table tr:last-child td { border-bottom:none; }
+  .data-table tr:hover td { background:rgba(255,255,255,0.02); }
+  .debate-table { font-size:11px; }
+  .debate-table td { padding:6px 10px; }
+
+  /* ── Badges ── */
+  .badge { display:inline-block; padding:2px 8px; border-radius:4px;
+            font-size:11px; font-weight:500; white-space:nowrap; }
+
+  /* ── Score bars ── */
+  .scores-grid { display:flex; flex-direction:column; gap:10px;
+                  background:var(--surface2); padding:20px; border-radius:8px;
+                  border:1px solid var(--border); }
+  .match-rates { display:flex; flex-direction:column; gap:10px;
+                  background:var(--surface2); padding:20px; border-radius:8px;
+                  border:1px solid var(--border); margin-top:16px; }
+  .score-row { display:flex; align-items:center; gap:12px; }
+  .score-label { width:240px; min-width:240px; font-size:12px; color:var(--text-dim); }
+  .bar-track { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; transition:width 0.8s ease; }
+  .score-pct { width:52px; text-align:right; font-family:var(--font-mono);
+                font-size:12px; font-weight:600; }
+  .risk-label { display:inline-block; margin-top:16px; padding:6px 16px;
+                 border-radius:6px; font-weight:600; font-size:13px; }
+
+  /* ── Stat grid ── */
+  .stat-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:20px; }
+  .stat { background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+           padding:14px; text-align:center; font-size:11px; color:var(--text-dim); }
+  .stat span { display:block; font-size:22px; font-weight:700; font-family:var(--font-mono);
+                color:var(--text); margin-bottom:4px; }
+  .stat.good span { color:var(--green); }
+  .stat.warn span { color:var(--yellow); }
+  .stat.bad  span { color:var(--red); }
+
+  /* ── Scoreboard ── */
+  .scoreboard { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .score-card { background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+                 padding:16px; text-align:center; font-size:12px; color:var(--text-dim); }
+  .score-card span { display:block; font-size:28px; font-weight:700;
+                      font-family:var(--font-mono); color:var(--accent); }
+
+  /* ── Justification cards ── */
+  .justification-card { background:var(--surface2); border:1px solid var(--border);
+                          border-radius:8px; margin-bottom:12px; overflow:hidden; }
+  .just-header { display:flex; align-items:center; gap:10px; padding:12px 16px;
+                  background:rgba(255,255,255,0.03); border-bottom:1px solid var(--border); }
+  .just-code { font-family:var(--font-mono); font-weight:600; font-size:14px; color:var(--accent); }
+  .just-type { font-size:11px; color:var(--text-dim); background:var(--border);
+                padding:2px 8px; border-radius:4px; }
+  .just-body { padding:12px 16px; display:flex; flex-direction:column; gap:6px; }
+  .just-row { font-size:12px; color:var(--text); }
+  .just-row strong { color:var(--text-dim); margin-right:6px; }
+  .comparison-note { color:var(--accent2); font-size:11px; }
+
+  /* ── Note excerpt ── */
+  .note-excerpt { background:var(--surface2); border:1px solid var(--border);
+                   border-radius:8px; padding:16px; font-family:var(--font-mono);
+                   font-size:11px; color:var(--text-dim); white-space:pre-wrap;
+                   max-height:200px; overflow-y:auto; line-height:1.7; }
+
+  /* ── Compliance ── */
+  .compliance-status { display:inline-block; padding:8px 20px; border-radius:6px;
+                         font-weight:700; font-size:14px; margin-bottom:12px; }
+  .issue-list { margin-left:20px; color:var(--text-dim); font-size:13px; }
+  .issue-list li { margin-bottom:4px; }
+
+  /* ── Recommendations ── */
+  .rec-list { margin-left:20px; }
+  .rec-list li { margin-bottom:8px; font-size:13px; color:var(--text); }
+  .rec-list li::marker { color:var(--accent); }
+
+  /* ── Misc ── */
+  .notes-box { background:rgba(56,189,248,0.05); border:1px solid rgba(56,189,248,0.2);
+                border-radius:6px; padding:12px 16px; font-size:12px;
+                color:var(--text-dim); margin-top:12px; line-height:1.6; }
+  .empty { color:var(--text-dim); font-size:12px; font-style:italic; padding:8px 0; }
+  .audit-summary-text { font-size:13px; line-height:1.7; color:var(--text);
+                          background:var(--surface2); border:1px solid var(--border);
+                          border-radius:8px; padding:16px; }
+
+  /* ── Responsive ── */
+  @media(max-width:900px) {
+    .shell { flex-direction:column; }
+    nav { width:100%; height:auto; position:relative; }
+    .stat-grid { grid-template-columns:repeat(3,1fr); }
+    .scoreboard { grid-template-columns:repeat(2,1fr); }
+    .score-label { width:160px; min-width:160px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── Sidebar nav ──────────────────────────────────────────────────── -->
+<nav>
+  <h1>🏥 MedCode AI</h1>
+  <div class="nav-group">
+    <div class="nav-group-title">Report</div>
+    <a href="#note">Clinical Note</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Agent Outputs</div>
+    <a href="#agents">Clinical vs Revenue</a>
+    <a href="#debate">Debate Resolution</a>
+    <a href="#final">Final Codes</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Review</div>
+    <a href="#human">Human Coder Codes</a>
+    <a href="#comparison">AI vs Human</a>
+    <a href="#compliance">Compliance</a>
+    <a href="#audit">Audit Findings</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Analysis</div>
+    <a href="#justifications">Justifications</a>
+    <a href="#scores">Confidence Scores</a>
+    <a href="#recommendations">Recommendations</a>
+    <a href="#summary">Audit Summary</a>
+  </div>
+</nav>
+
+<!-- ── Main content ─────────────────────────────────────────────────── -->
+<main>
+
+  <div class="report-header">
+    <h2>Medical Coding AI — Compliance Report</h2>
+    <div class="report-meta">
+      <span>Generated: March 25, 2026  11:59</span>
+      <span>LLM: Llama 4 Scout via Groq</span>
+      <span>Framework: LangGraph + ChromaDB</span>
+    </div>
+  </div>
+
+  <section id="note">
+    <h3>Clinical Note Excerpt</h3>
+    <div class="note-excerpt">Here is the cleaned and normalised clinical note:
+
+Clinical Discharge Summary
+
+Patient Details:
+Name: John Doe
+Age: 58
+Gender: Male
+Patient ID: P123456
+
+Admission Details:
+Date of Admission: 10 March 2026
+Date of Discharge: 15 March 2026
+Reason for Admission: Chest pain and Shortness of Breath
+
+Clinical Findings:
+The patient presented with elevated blood pressure and abnormal ECG findings.
+
+Diagnosis:
+Primary: Acute Myocardial Infarction
+Secondary: Hypertension, Type 2 Diabetes Mellitus
+
+Treatment Provided:
+The patient received ECG monitoring, coronary angiography, and medication management, including insulin and antihypertensives.
+
+Procedures:
+Percutaneous Coronary Intervention (PCI)
+
+Discharge Medications:
+Aspirin, Atorvastatin, Metformin, Lisinopril
+
+Follow-up Advice:
+The patient is advised to follow up after 2 weeks and to maintain a healthy diet and exercise routine.</div>
+  </section>
+
+  <section id="agents">
+    <h3>Agent Independent Coding</h3>
+    <div class="agent-tabs">
+      <div class="agent-tab active" onclick="switchTab(this,'clinical-pane')">🏥 Clinical Accuracy Agent</div>
+      <div class="agent-tab" onclick="switchTab(this,'revenue-pane')">💰 Revenue Optimization Agent</div>
+    </div>
+    <div id="clinical-pane" class="agent-pane active"><h4>ICD-10 Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Conf</th><th>Rationale</th></tr></thead><tbody><tr><td>I24.9</td><td>Acute myocardial infarction, unspecified</td><td>principal</td><td>100%</td><td>The patient presented with Acute Myocardial Infarction as the primary diagnosis.</td></tr><tr><td>I10</td><td>Essential (primary) hypertension</td><td>secondary</td><td>100%</td><td>The patient has a diagnosis of Hypertension and received medication management.</td></tr><tr><td>E11.9</td><td>Type 2 diabetes mellitus without complications</td><td>secondary</td><td>100%</td><td>The patient has a diagnosis of Type 2 Diabetes Mellitus.</td></tr><tr><td>R07.1</td><td>Chest pain on breathing</td><td>additional</td><td>80%</td><td>The patient presented with chest pain.</td></tr><tr><td>R06.02</td><td>Shortness of breath</td><td>additional</td><td>80%</td><td>The patient presented with shortness of breath.</td></tr></tbody></table><h4>CPT Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Conf</th><th>Rationale</th></tr></thead><tbody><tr><td>99221</td><td>Initial hospital care, detailed history and examination</td><td>1</td><td>100%</td><td>The patient was admitted to the hospital and received initial care.</td></tr><tr><td>92928</td><td>Percutaneous coronary intervention, coronary artery</td><td>1</td><td>100%</td><td>The patient underwent Percutaneous Coronary Intervention (PCI).</td></tr><tr><td>93000</td><td>Electrocardiogram, routine ECG</td><td>1</td><td>80%</td><td>The patient received ECG monitoring.</td></tr><tr><td>99238</td><td>Hospital discharge day management</td><td>1</td><td>100%</td><td>The patient was discharged from the hospital.</td></tr></tbody></table><h4>HCPCS Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody><tr><td>J0180</td><td>Aspirin, 325 mg</td><td>drug</td><td>30</td></tr><tr><td>J1890</td><td>Atorvastatin, 10 mg</td><td>drug</td><td>30</td></tr><tr><td>J7220</td><td>Metformin, 500 mg</td><td>drug</td><td>30</td></tr><tr><td>J0510</td><td>Lisinopril, 5 mg</td><td>drug</td><td>30</td></tr></tbody></table><div class="notes-box"><strong>Agent Notes:</strong> The E&amp;M level was determined based on the medical decision making (MDM) and the patient&#x27;s condition. The ICD-10 codes were sequenced based on the principal diagnosis and the secondary diagnoses. The CPT codes were assigned based on the procedures performed during the hospital stay. The HCPCS codes were assigned based on the medications discharged to the patient.</div></div>
+    <div id="revenue-pane"  class="agent-pane"><h4>ICD-10 Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Conf</th><th>Rationale</th></tr></thead><tbody><tr><td>I24.9</td><td>Acute myocardial infarction, unspecified</td><td>principal</td><td>100%</td><td>The patient presented with Acute Myocardial Infarction as the primary diagnosis.</td></tr><tr><td>I10</td><td>Essential (primary) hypertension</td><td>secondary</td><td>100%</td><td>The patient has a diagnosis of Hypertension and received medication management.</td></tr><tr><td>E11.9</td><td>Type 2 diabetes mellitus without complications</td><td>secondary</td><td>100%</td><td>The patient has a diagnosis of Type 2 Diabetes Mellitus.</td></tr></tbody></table><h4>CPT Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Conf</th><th>Rationale</th></tr></thead><tbody><tr><td>99221</td><td>Initial hospital care, detailed history and examination</td><td>1</td><td>100%</td><td>The patient was admitted to the hospital and received initial care.</td></tr><tr><td>92928</td><td>Percutaneous coronary intervention, coronary artery</td><td>1</td><td>100%</td><td>The patient underwent Percutaneous Coronary Intervention (PCI).</td></tr><tr><td>93000</td><td>Electrocardiogram, routine ECG</td><td>1</td><td>80%</td><td>The patient received ECG monitoring.</td></tr><tr><td>99238</td><td>Hospital discharge day management</td><td>1</td><td>100%</td><td>The patient was discharged from the hospital.</td></tr></tbody></table><h4>HCPCS Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody><tr><td>J0180</td><td>Aspirin, 325 mg</td><td>drug</td><td>30</td></tr><tr><td>J1890</td><td>Atorvastatin, 10 mg</td><td>drug</td><td>30</td></tr><tr><td>J7220</td><td>Metformin, 500 mg</td><td>drug</td><td>30</td></tr><tr><td>J0510</td><td>Lisinopril, 5 mg</td><td>drug</td><td>30</td></tr></tbody></table><div class="notes-box"><strong>Agent Notes:</strong> Added HCPCS code for insulin. No changes to ICD-10 or CPT codes. E&amp;M level appears accurate based on provided documentation.</div></div>
+  </section>
+
+  <section id="debate">
+    <h3>⚖️ Debate Agent — Conflict Resolution</h3>
+    
+        <div class="scoreboard">
+          <div class="score-card">🤝 Agreed<br><span>0</span></div>
+          <div class="score-card" title="Codes where agents disagreed">⚖️ Conflicts<br><span>0</span></div>
+          <div class="score-card">🏥 Clinical Won<br><span>0</span></div>
+          <div class="score-card">💰 Revenue Won<br><span>0</span></div>
+          
+        </div><div class="notes-box"><strong>Debate Summary:</strong> Debate failed: 2 validation errors for DebatePoint
+final_code
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/string_type
+final_description
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/string_type. Using clinical agent fallback.</div>
+  </section>
+
+  <section id="final">
+    <h3>📋 Final Resolved Codes (Post-Debate)</h3>
+    <h4>ICD-10-CM Diagnosis Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th></tr></thead><tbody><tr><td>I24.9</td><td>Acute myocardial infarction, unspecified</td><td>principal</td><td>1.0</td></tr><tr><td>I10</td><td>Essential (primary) hypertension</td><td>secondary</td><td>1.0</td></tr><tr><td>E11.9</td><td>Type 2 diabetes mellitus without complications</td><td>secondary</td><td>1.0</td></tr><tr><td>R07.1</td><td>Chest pain on breathing</td><td>additional</td><td>0.8</td></tr><tr><td>R06.02</td><td>Shortness of breath</td><td>additional</td><td>0.8</td></tr></tbody></table>
+    <h4>CPT Procedure Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Confidence</th></tr></thead><tbody><tr><td>99221</td><td>Initial hospital care, detailed history and examination</td><td>1</td><td>1.0</td></tr><tr><td>92928</td><td>Percutaneous coronary intervention, coronary artery</td><td>1</td><td>1.0</td></tr><tr><td>93000</td><td>Electrocardiogram, routine ECG</td><td>1</td><td>0.8</td></tr><tr><td>99238</td><td>Hospital discharge day management</td><td>1</td><td>1.0</td></tr></tbody></table>
+    <h4>HCPCS Level II Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody><tr><td>J0180</td><td>Aspirin, 325 mg</td><td>drug</td><td>30</td></tr><tr><td>J1890</td><td>Atorvastatin, 10 mg</td><td>drug</td><td>30</td></tr><tr><td>J7220</td><td>Metformin, 500 mg</td><td>drug</td><td>30</td></tr><tr><td>J0510</td><td>Lisinopril, 5 mg</td><td>drug</td><td>30</td></tr></tbody></table>
+  </section>
+
+  <section id="human">
+    <h3>Human Coder Codes</h3>
+    <p class='empty'>No human codes provided. Run with --note 1/2/3 to include sample human codes.</p>
+  </section>
+
+  <section id="comparison">
+    <h3>AI vs Human Comparison</h3>
+    <p class='empty'>No comparison data (human codes not provided).</p>
+  </section>
+
+  <section id="compliance">
+    <h3>Compliance Validation (NCCI · MUE · LCD · NCD)</h3>
+    <div class="compliance-status" style="color:#166534;background:#dcfce7">✅ COMPLIANT</div><div class="compliance-warning">⚠️ ADVISORY ISSUES — Review before submission</div><ul class='issue-list'><li>LCD Issues: 4</li></ul>
+  </section>
+
+  <section id="audit">
+    <h3>Audit Findings</h3>
+    <table class="data-table "><thead><tr><th>Type</th><th>Code</th><th>Description</th><th>Severity</th><th>Action Required</th></tr></thead><tbody><tr><td><span style="color:#facc15;font-weight:700">── AI AUDIT FINDINGS</span></td><td></td><td></td><td></td><td></td></tr><tr><td>upcoding</td><td>99221</td><td>The initial hospital care code 99221 requires a comprehensive history and examination, but the documentation only supports a detailed history and examination.</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>Review and revise the code to 99222 if supported by documentation.</td></tr><tr><td>missing</td><td>Z79.4</td><td>The patient&#x27;s use of insulin for Type 2 Diabetes Mellitus is not coded.</td><td><span class="badge" style="color:#14532d;background:#bbf7d0">LOW</span></td><td>Add code Z79.4 to reflect insulin use.</td></tr><tr><td>incorrect</td><td>R07.1</td><td>The code R07.1, Chest pain on breathing, does not accurately reflect the primary reason for admission, which is chest pain and shortness of breath due to Acute Myocardial Infarction.</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>Remove code R07.1 as it is not a primary diagnosis.</td></tr><tr><td>high_risk</td><td>I24.9, 92928</td><td>The combination of codes for Acute Myocardial Infarction (I24.9) and Percutaneous Coronary Intervention (92928) poses a high risk for OIG or RAC audit.</td><td><span class="badge" style="color:#7f1d1d;background:#fecaca">HIGH</span></td><td>Verify documentation supports medical necessity for PCI.</td></tr></tbody></table>
+  </section>
+
+  <section id="justifications">
+    <h3>Code Justifications with AI vs Human Verdict</h3>
+    
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">I24.9</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Acute Myocardial Infarction mentioned under Diagnosis: Primary</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 9, Diseases of the circulatory system</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient was diagnosed with Acute Myocardial Infarction, and I24.9 is the correct code for this condition.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">I10</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Hypertension mentioned under Diagnosis: Secondary</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 9, Diseases of the circulatory system</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient has a secondary diagnosis of Hypertension, and I10 is the correct code for this condition.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">E11.9</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Type 2 Diabetes Mellitus mentioned under Diagnosis: Secondary</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 4, Endocrine, nutritional and metabolic diseases</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient has a secondary diagnosis of Type 2 Diabetes Mellitus, and E11.9 is the correct code for this condition.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">R07.1</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Chest pain mentioned under Reason for Admission</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 18, Symptoms, signs and abnormal clinical and laboratory findings</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient presented with chest pain, and R07.1 is the correct code for this symptom.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">R06.02</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Shortness of Breath mentioned under Reason for Admission</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 18, Symptoms, signs and abnormal clinical and laboratory findings</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient presented with shortness of breath, and R06.02 is the correct code for this symptom.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">99221</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Initial hospital care provided, as indicated by hospital admission</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024, Evaluation and Management Services</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient received initial hospital care, and 99221 is the correct code for this service.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">92928</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Percutaneous Coronary Intervention (PCI) procedure mentioned</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024, Cardiovascular Procedures</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient underwent a PCI procedure, and 92928 is the correct code for this service.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">93000</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> ECG monitoring mentioned under Treatment Provided</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024, Cardiovascular Procedures</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient received ECG monitoring, and 93000 is the correct code for this service.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">99238</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Discharge day management service provided</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024, Evaluation and Management Services</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient received discharge day management services, and 99238 is the correct code for this service.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">J0180</span>
+            <span class="just-type">HCPCS</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Aspirin listed under Discharge Medications</div>
+            <div class="just-row"><strong>Guideline:</strong> HCPCS 2024, Drugs and Biologics</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient was discharged with Aspirin, and J0180 is the correct code for this medication.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">J1890</span>
+            <span class="just-type">HCPCS</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Atorvastatin listed under Discharge Medications</div>
+            <div class="just-row"><strong>Guideline:</strong> HCPCS 2024, Drugs and Biologics</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient was discharged with Atorvastatin, and J1890 is the correct code for this medication.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">J7220</span>
+            <span class="just-type">HCPCS</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Insulin (implied by mention of insulin under Treatment Provided)</div>
+            <div class="just-row"><strong>Guideline:</strong> HCPCS 2024, Drugs and Biologics</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient received insulin, and J7220 is the correct code for this medication.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">J0510</span>
+            <span class="just-type">HCPCS</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Lisinopril listed under Discharge Medications (assuming Lisinopril is similar to Lisinopril HCPCS code)</div>
+            <div class="just-row"><strong>Guideline:</strong> HCPCS 2024, Drugs and Biologics</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient was discharged with Lisinopril, and J0510 is the correct code for this medication.</div>
+            
+            
+          </div>
+        </div>
+  </section>
+
+  <section id="scores">
+    <h3>Confidence & Risk Scores</h3>
+    
+        <div class="scores-grid">
+          
+    <div class="score-row">
+      <span class="score-label">Overall Coding Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:96.3%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">96.3%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">ICD-10 Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:94.4%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">94.4%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">CPT Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:96.5%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">96.5%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">HCPCS Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:100.0%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">100.0%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">Compliance Risk Score</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:40.0%;background:#f59e0b"></div>
+      </div>
+      <span class="score-pct" style="color:#f59e0b">40.0%</span>
+    </div>
+          
+          
+    <div class="score-row">
+      <span class="score-label">Clinical vs Revenue Agreement</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:100.0%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">100.0%</span>
+    </div>
+        </div>
+        <div class="risk-label" style="color:#92400e;background:#fef9c3">
+          Risk Level: MEDIUM
+        </div>
+  </section>
+
+  <section id="recommendations">
+    <h3>Recommendations</h3>
+    <ul class='rec-list'><li>Review LCD coverage criteria (4 advisory warning(s)).</li><li>Revenue opportunity: Medication management for insulin was provided but not coded: &#x27;The patient received medication management, including insulin&#x27;</li><li>HIGH RISK — Verify documentation supports medical necessity for PCI.</li></ul>
+  </section>
+
+  <section id="summary">
+    <h3>Audit Summary</h3>
+    <div class="audit-summary-text">Debate failed: 2 validation errors for DebatePoint
+final_code
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/string_type
+final_description
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/string_type. Using clinical agent fallback.
+
+Automated audit completed. Review all high-severity findings before submission.</div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function switchTab(tab, paneId) {
+  document.querySelectorAll('.agent-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.agent-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+}
+
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks  = document.querySelectorAll('nav a');
+const observer  = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const active = document.querySelector('nav a[href="#' + e.target.id + '"]');
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-40% 0px -55% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Medical Coding Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0a0e1a;
+    --surface:  #111827;
+    --surface2: #1f2937;
+    --border:   #2d3748;
+    --text:     #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent:   #38bdf8;
+    --accent2:  #818cf8;
+    --green:    #4ade80;
+    --yellow:   #facc15;
+    --red:      #f87171;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-body);
+          font-size:14px; line-height:1.6; }
+
+  /* ── Layout ── */
+  .shell { display:flex; min-height:100vh; }
+  nav { width:240px; min-width:240px; background:var(--surface);
+         border-right:1px solid var(--border); padding:24px 0;
+         position:sticky; top:0; height:100vh; overflow-y:auto; }
+  nav h1 { font-family:var(--font-mono); font-size:12px; color:var(--accent);
+             letter-spacing:0.1em; text-transform:uppercase;
+             padding:0 20px 16px; border-bottom:1px solid var(--border); }
+  nav a { display:block; padding:8px 20px; color:var(--text-dim); text-decoration:none;
+            font-size:12px; transition:all 0.15s; border-left:2px solid transparent; }
+  nav a:hover, nav a.active { color:var(--accent); border-left-color:var(--accent);
+                                background:rgba(56,189,248,0.05); }
+  nav .nav-group { margin-top:16px; }
+  nav .nav-group-title { padding:8px 20px 4px; font-size:10px; text-transform:uppercase;
+                           letter-spacing:0.1em; color:var(--text-dim); }
+  main { flex:1; padding:32px 40px; max-width:1400px; }
+
+  /* ── Header ── */
+  .report-header { margin-bottom:32px; padding-bottom:24px;
+                    border-bottom:1px solid var(--border); }
+  .report-header h2 { font-size:22px; font-weight:600; color:var(--text);
+                        font-family:var(--font-mono); }
+  .report-meta { margin-top:8px; color:var(--text-dim); font-size:12px; }
+  .report-meta span { margin-right:24px; }
+
+  /* ── Sections ── */
+  section { margin-bottom:40px; scroll-margin-top:24px; }
+  section h3 { font-size:13px; font-weight:600; text-transform:uppercase;
+                letter-spacing:0.08em; color:var(--accent); margin-bottom:16px;
+                padding-bottom:8px; border-bottom:1px solid var(--border);
+                font-family:var(--font-mono); }
+  section h4 { font-size:12px; font-weight:500; color:var(--text-dim);
+                margin:16px 0 8px; text-transform:uppercase; letter-spacing:0.05em; }
+
+  /* ── Agent tabs ── */
+  .agent-tabs { display:flex; gap:0; margin-bottom:0; border-bottom:1px solid var(--border); }
+  .agent-tab { padding:10px 20px; font-size:12px; font-weight:500; cursor:pointer;
+                color:var(--text-dim); border-bottom:2px solid transparent;
+                transition:all 0.15s; user-select:none; }
+  .agent-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .agent-pane { display:none; padding-top:16px; }
+  .agent-pane.active { display:block; }
+
+  /* ── Tables ── */
+  .data-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:16px; }
+  .data-table th { background:var(--surface2); color:var(--text-dim); font-weight:500;
+                    text-align:left; padding:8px 12px; font-size:11px; letter-spacing:0.05em;
+                    text-transform:uppercase; border-bottom:1px solid var(--border); }
+  .data-table td { padding:8px 12px; border-bottom:1px solid var(--border);
+                    vertical-align:top; color:var(--text); }
+  .data-table tr:last-child td { border-bottom:none; }
+  .data-table tr:hover td { background:rgba(255,255,255,0.02); }
+  .debate-table { font-size:11px; }
+  .debate-table td { padding:6px 10px; }
+
+  /* ── Badges ── */
+  .badge { display:inline-block; padding:2px 8px; border-radius:4px;
+            font-size:11px; font-weight:500; white-space:nowrap; }
+
+  /* ── Score bars ── */
+  .scores-grid { display:flex; flex-direction:column; gap:10px;
+                  background:var(--surface2); padding:20px; border-radius:8px;
+                  border:1px solid var(--border); }
+  .match-rates { display:flex; flex-direction:column; gap:10px;
+                  background:var(--surface2); padding:20px; border-radius:8px;
+                  border:1px solid var(--border); margin-top:16px; }
+  .score-row { display:flex; align-items:center; gap:12px; }
+  .score-label { width:240px; min-width:240px; font-size:12px; color:var(--text-dim); }
+  .bar-track { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; transition:width 0.8s ease; }
+  .score-pct { width:52px; text-align:right; font-family:var(--font-mono);
+                font-size:12px; font-weight:600; }
+  .risk-label { display:inline-block; margin-top:16px; padding:6px 16px;
+                 border-radius:6px; font-weight:600; font-size:13px; }
+
+  /* ── Stat grid ── */
+  .stat-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:20px; }
+  .stat { background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+           padding:14px; text-align:center; font-size:11px; color:var(--text-dim); }
+  .stat span { display:block; font-size:22px; font-weight:700; font-family:var(--font-mono);
+                color:var(--text); margin-bottom:4px; }
+  .stat.good span { color:var(--green); }
+  .stat.warn span { color:var(--yellow); }
+  .stat.bad  span { color:var(--red); }
+
+  /* ── Scoreboard ── */
+  .scoreboard { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .score-card { background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+                 padding:16px; text-align:center; font-size:12px; color:var(--text-dim); }
+  .score-card span { display:block; font-size:28px; font-weight:700;
+                      font-family:var(--font-mono); color:var(--accent); }
+
+  /* ── Justification cards ── */
+  .justification-card { background:var(--surface2); border:1px solid var(--border);
+                          border-radius:8px; margin-bottom:12px; overflow:hidden; }
+  .just-header { display:flex; align-items:center; gap:10px; padding:12px 16px;
+                  background:rgba(255,255,255,0.03); border-bottom:1px solid var(--border); }
+  .just-code { font-family:var(--font-mono); font-weight:600; font-size:14px; color:var(--accent); }
+  .just-type { font-size:11px; color:var(--text-dim); background:var(--border);
+                padding:2px 8px; border-radius:4px; }
+  .just-body { padding:12px 16px; display:flex; flex-direction:column; gap:6px; }
+  .just-row { font-size:12px; color:var(--text); }
+  .just-row strong { color:var(--text-dim); margin-right:6px; }
+  .comparison-note { color:var(--accent2); font-size:11px; }
+
+  /* ── Note excerpt ── */
+  .note-excerpt { background:var(--surface2); border:1px solid var(--border);
+                   border-radius:8px; padding:16px; font-family:var(--font-mono);
+                   font-size:11px; color:var(--text-dim); white-space:pre-wrap;
+                   max-height:200px; overflow-y:auto; line-height:1.7; }
+
+  /* ── Compliance ── */
+  .compliance-status { display:inline-block; padding:8px 20px; border-radius:6px;
+                         font-weight:700; font-size:14px; margin-bottom:12px; }
+  .issue-list { margin-left:20px; color:var(--text-dim); font-size:13px; }
+  .issue-list li { margin-bottom:4px; }
+
+  /* ── Recommendations ── */
+  .rec-list { margin-left:20px; }
+  .rec-list li { margin-bottom:8px; font-size:13px; color:var(--text); }
+  .rec-list li::marker { color:var(--accent); }
+
+  /* ── Misc ── */
+  .notes-box { background:rgba(56,189,248,0.05); border:1px solid rgba(56,189,248,0.2);
+                border-radius:6px; padding:12px 16px; font-size:12px;
+                color:var(--text-dim); margin-top:12px; line-height:1.6; }
+  .empty { color:var(--text-dim); font-size:12px; font-style:italic; padding:8px 0; }
+  .audit-summary-text { font-size:13px; line-height:1.7; color:var(--text);
+                          background:var(--surface2); border:1px solid var(--border);
+                          border-radius:8px; padding:16px; }
+
+  /* ── Responsive ── */
+  @media(max-width:900px) {
+    .shell { flex-direction:column; }
+    nav { width:100%; height:auto; position:relative; }
+    .stat-grid { grid-template-columns:repeat(3,1fr); }
+    .scoreboard { grid-template-columns:repeat(2,1fr); }
+    .score-label { width:160px; min-width:160px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── Sidebar nav ──────────────────────────────────────────────────── -->
+<nav>
+  <h1>🏥 MedCode AI</h1>
+  <div class="nav-group">
+    <div class="nav-group-title">Report</div>
+    <a href="#note">Clinical Note</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Agent Outputs</div>
+    <a href="#agents">Clinical vs Revenue</a>
+    <a href="#debate">Debate Resolution</a>
+    <a href="#final">Final Codes</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Review</div>
+    <a href="#human">Human Coder Codes</a>
+    <a href="#comparison">AI vs Human</a>
+    <a href="#compliance">Compliance</a>
+    <a href="#audit">Audit Findings</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Analysis</div>
+    <a href="#justifications">Justifications</a>
+    <a href="#scores">Confidence Scores</a>
+    <a href="#recommendations">Recommendations</a>
+    <a href="#summary">Audit Summary</a>
+  </div>
+</nav>
+
+<!-- ── Main content ─────────────────────────────────────────────────── -->
+<main>
+
+  <div class="report-header">
+    <h2>Medical Coding AI — Compliance Report</h2>
+    <div class="report-meta">
+      <span>Generated: March 26, 2026  22:25</span>
+      <span>LLM: Llama 4 Scout via Groq</span>
+      <span>Framework: LangGraph + ChromaDB</span>
+    </div>
+  </div>
+
+  <section id="note">
+    <h3>Clinical Note Excerpt</h3>
+    <div class="note-excerpt">Here is the cleaned and normalised clinical note:
+
+OPERATIVE AND DISCHARGE NOTE
+
+Patient: Jane Smith | Date of Birth: 1995-07-22 | Medical Record Number: 789012
+Admission Date: 2024-02-05 | Discharge Date: 2024-02-07
+Surgeon: Dr. Michael Chen, MD, FACS
+
+PRINCIPAL DIAGNOSIS:
+Acute appendicitis without abscess or perforation.
+
+SECONDARY DIAGNOSIS:
+Nausea and vomiting (resolved post-operatively)
+
+HISTORY OF PRESENT ILLNESS:
+The 28-year-old female patient presented to the Emergency Department with an 18-hour history of right lower quadrant abdominal pain, nausea, vomiting, and low-grade fever (38.1°C). The pain initially started in the periumbilical area and migrated to the right lower quadrant. She had no prior episodes. Her last bowel movement was normal.
+
+PHYSICAL EXAM:
+The patient&#x27;s temperature was 38.2°C, blood pressure was 118/72, heart rate was 96 (tachycardia), respiratory rate was 14, and oxygen saturation was 99%. McBurney&#x27;s point tenderness was positive +++ . Rebound tenderness was positive. Rovsing sign was positive. Psoas sign was positive.
+
+DIAGNOSTIC WORKUP:
+- Complete Blood Count: White Blood Cell count 14,800 with left shift (neutrophilia), Haemoglobin 13.2
+- C-Reactive Protein: 48 mg/L (elevated)
+- Urinalysis: Normal, pregnancy test negative
+- Computed Tomography of the abdomen and pelvis with contrast: The appendix was dilated to 9mm, with periappendiceal fat stranding. There was no perforation, no abscess, and no free air.
+
+OPERATIVE REPORT:
+The patient underw
+
+[Note truncated — full text processed by pipeline]</div>
+  </section>
+
+  <section id="agents">
+    <h3>Agent Independent Coding</h3>
+    <div class="agent-tabs">
+      <div class="agent-tab active" onclick="switchTab(this,'clinical-pane')">🏥 Clinical Accuracy Agent</div>
+      <div class="agent-tab" onclick="switchTab(this,'revenue-pane')">💰 Revenue Optimization Agent</div>
+    </div>
+    <div id="clinical-pane" class="agent-pane active"><h4>ICD-10 Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Conf</th><th>Rationale</th></tr></thead><tbody><tr><td>K35.89</td><td>Other acute appendicitis without perforation or gangrene</td><td>principal</td><td>100%</td><td>The patient was diagnosed with acute appendicitis without abscess or perforation</td></tr><tr><td>R11.2</td><td>Nausea with vomiting, unspecified</td><td>secondary</td><td>100%</td><td>The patient experienced nausea and vomiting, which is accurately described by R1</td></tr></tbody></table><h4>CPT Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Conf</th><th>Rationale</th></tr></thead><tbody><tr><td>44950</td><td>Appendectomy; laparoscopic</td><td>1</td><td>100%</td><td>The patient underwent a laparoscopic appendectomy, which matches the description</td></tr><tr><td>74160</td><td>Computed tomography of the abdomen with contrast</td><td>1</td><td>100%</td><td>The patient had a CT scan of the abdomen and pelvis with contrast, which aligns </td></tr><tr><td>99284</td><td>Emergency department visit for the evaluation and management of a patient</td><td>1</td><td>80%</td><td>Although not explicitly listed, ED visits are often coded with CPT 99284, but th</td></tr></tbody></table><h4>HCPCS Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody><tr><td>J0690</td><td>Injection, cefazolin sodium, 500 mg</td><td>drug</td><td>4</td></tr><tr><td>J2270</td><td>Injection, morphine sulfate, up to 10 mg</td><td>drug</td><td>2</td></tr><tr><td>J2405</td><td>Injection, ondansetron 4mg</td><td>drug</td><td>1</td></tr></tbody></table><div class="notes-box"><strong>Agent Notes:</strong> The CPT code for anesthesia was not included as it was not explicitly mentioned. The patient&#x27;s medications were evaluated; only those directly administered during the encounter were coded.</div></div>
+    <div id="revenue-pane"  class="agent-pane"><h4>ICD-10 Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Conf</th><th>Rationale</th></tr></thead><tbody><tr><td>K35.890</td><td>Other acute appendicitis without perforation or gangrene</td><td>principal</td><td>100%</td><td>The patient was diagnosed with acute appendicitis without abscess or perforation</td></tr><tr><td>R11.2</td><td>Nausea with vomiting, unspecified</td><td>secondary</td><td>100%</td><td>The patient presented with nausea and vomiting.</td></tr><tr><td>R50.9</td><td>Fever, unspecified</td><td>secondary</td><td>80%</td><td>The patient had a low-grade fever (38.1°C and 38.2°C).</td></tr></tbody></table><h4>CPT Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Conf</th><th>Rationale</th></tr></thead><tbody><tr><td>44950</td><td>Appendectomy; laparoscopic</td><td>1</td><td>100%</td><td>The patient underwent a laparoscopic appendectomy.</td></tr><tr><td>99238</td><td>Hospital discharge day management; 30 minutes or less</td><td>1</td><td>80%</td><td>The patient was discharged on post-operative day 2, implying a hospital discharg</td></tr><tr><td>87070</td><td>Blood count; complete (CBC), automated</td><td>1</td><td>100%</td><td>The patient had a Complete Blood Count (CBC) test.</td></tr><tr><td>88185</td><td>C-Reactive Protein (CRP)</td><td>1</td><td>100%</td><td>The patient had a C-Reactive Protein (CRP) test.</td></tr><tr><td>74160</td><td>Computed tomography of the abdomen with contrast</td><td>1</td><td>100%</td><td>The patient underwent Computed Tomography of the abdomen and pelvis with contras</td></tr><tr><td>J0690</td><td>Injection, cefazolin sodium, 500 mg</td><td>4</td><td>100%</td><td>The patient received Cefazolin 2g intravenously pre-operatively.</td></tr><tr><td>J2270</td><td>Injection, morphine sulfate, up to 10 mg</td><td>2</td><td>100%</td><td>The patient received Morphine 2mg intravenously as needed (x2 doses post-operati</td></tr><tr><td>J2405</td><td>Injection, ondansetron 4mg</td><td>1</td><td>100%</td><td>The patient received Ondansetron 4mg intravenously as needed (x1 dose).</td></tr></tbody></table><h4>HCPCS Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody><tr><td>A650</td><td>Acetaminophen 650 mg</td><td>drug</td><td>6</td></tr><tr><td>J236</td><td>Ibuprofen 400 mg</td><td>drug</td><td>8</td></tr></tbody></table><div class="notes-box"><strong>Agent Notes:</strong> The patient underwent a laparoscopic appendectomy and received several medications during admission. The hospital discharge day management service and lab tests were also billed.</div></div>
+  </section>
+
+  <section id="debate">
+    <h3>⚖️ Debate Agent — Conflict Resolution</h3>
+    
+        <div class="scoreboard">
+          <div class="score-card">🤝 Agreed<br><span>3</span></div>
+          <div class="score-card" title="Codes where agents disagreed">⚖️ Conflicts<br><span>1</span></div>
+          <div class="score-card">🏥 Clinical Won<br><span>1</span></div>
+          <div class="score-card">💰 Revenue Won<br><span>0</span></div>
+          
+        </div><table class="data-table debate-table"><thead><tr><th>Code</th><th>Type</th><th>Conflict</th><th>Clinical Said</th><th>Revenue Said</th><th>Winner</th><th>Resolution</th><th>Reasoning</th></tr></thead><tbody><tr><td>K35.89</td><td>ICD-10</td><td>different_code</td><td>K35.89 - Other acute appendicitis without perforation or gangrene</td><td>K35.890 - Other acute appendicitis without perforation or gangrene</td><td><span class="badge" style="color:#0e7490;background:#cffafe">🏥 Clinical</span></td><td>Clinical agent&#x27;s code K35.89 is more specific and accurate. ICD-10 coding guidel</td><td>ICD-10 coding guidelines</td></tr></tbody></table><div class="notes-box"><strong>Debate Summary:</strong> The clinical agent&#x27;s code for ICD-10 was more specific and accurate. Both agents agreed on most CPT and HCPCS codes.</div>
+  </section>
+
+  <section id="final">
+    <h3>📋 Final Resolved Codes (Post-Debate)</h3>
+    <h4>ICD-10-CM Diagnosis Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th></tr></thead><tbody><tr><td>K35.89</td><td>Other acute appendicitis without perforation or gangrene</td><td>principal</td><td>1.0</td></tr><tr><td>R11.2</td><td>Nausea with vomiting, unspecified</td><td>secondary</td><td>1.0</td></tr></tbody></table>
+    <h4>CPT Procedure Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Confidence</th></tr></thead><tbody><tr><td>44950</td><td>Appendectomy; laparoscopic</td><td>1</td><td>1.0</td></tr><tr><td>74160</td><td>Computed tomography of the abdomen with contrast</td><td>1</td><td>1.0</td></tr></tbody></table>
+    <h4>HCPCS Level II Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody><tr><td>J0690</td><td>Injection, cefazolin sodium, 500 mg</td><td>drug</td><td>4</td></tr><tr><td>J2270</td><td>Injection, morphine sulfate, up to 10 mg</td><td>drug</td><td>2</td></tr><tr><td>J2405</td><td>Injection, ondansetron 4mg</td><td>drug</td><td>1</td></tr></tbody></table>
+  </section>
+
+  <section id="human">
+    <h3>Human Coder Codes</h3>
+    <p class='empty'>No human codes provided. Run with --note 1/2/3 to include sample human codes.</p>
+  </section>
+
+  <section id="comparison">
+    <h3>AI vs Human Comparison</h3>
+    <p class='empty'>No comparison data (human codes not provided).</p>
+  </section>
+
+  <section id="compliance">
+    <h3>Compliance Validation (NCCI · MUE · LCD · NCD)</h3>
+    <div class="compliance-status" style="color:#166534;background:#dcfce7">✅ COMPLIANT</div><div class="compliance-warning">⚠️ ADVISORY ISSUES — Review before submission</div><ul class='issue-list'><li>Missed Billable Codes: 1</li></ul>
+  </section>
+
+  <section id="audit">
+    <h3>Audit Findings</h3>
+    <table class="data-table "><thead><tr><th>Type</th><th>Code</th><th>Description</th><th>Severity</th><th>Action Required</th></tr></thead><tbody><tr><td><span style="color:#facc15;font-weight:700">── AI AUDIT FINDINGS</span></td><td></td><td></td><td></td><td></td></tr><tr><td>missing</td><td>R50.81</td><td>Fever not coded</td><td><span class="badge" style="color:#14532d;background:#bbf7d0">LOW</span></td><td>Add ICD-10 code R50.81 for fever</td></tr><tr><td>missing</td><td>Z48.2</td><td>Postprocedural status not coded</td><td><span class="badge" style="color:#14532d;background:#bbf7d0">LOW</span></td><td>Consider adding ICD-10 code Z48.2 for postprocedural status</td></tr><tr><td>incorrect</td><td>K35.89</td><td>K35.89 is not the most specific code; K35.1 is more accurate</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>Update ICD-10 code to K35.1 for acute appendicitis without perforation or gangrene</td></tr><tr><td>high_risk</td><td>44950</td><td>Laparoscopic appendectomy with potential for unlisted procedure or additional CPT codes</td><td><span class="badge" style="color:#7f1d1d;background:#fecaca">HIGH</span></td><td>Verify documentation supports only 44950 and no additional CPT codes</td></tr></tbody></table>
+  </section>
+
+  <section id="justifications">
+    <h3>Code Justifications with AI vs Human Verdict</h3>
+    
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">K35.89</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Acute appendicitis without abscess or perforation</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 4</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient&#x27;s principal diagnosis is acute appendicitis without abscess or perforation, which aligns with code K35.89.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">R11.2</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Nausea and vomiting (resolved post-operatively)</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 4</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient experienced nausea and vomiting, which are classified under code R11.2 as secondary diagnoses.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">44950</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> The patient underwent a laparoscopic appendectomy.</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> Code 44950 corresponds to a laparoscopic appendectomy, which matches the operative report.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">74160</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Computed Tomography of the abdomen and pelvis with contrast</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The CPT code 74160 is assigned for a CT scan of the abdomen and pelvis with contrast, which was performed on the patient.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">J0690</span>
+            <span class="just-type">HCPCS</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Antibiotic administration</div>
+            <div class="just-row"><strong>Guideline:</strong> HCPCS 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> Although specific medication details are not provided, J0690 typically covers antibiotic administration, which is common post-operatively for appendectomy.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">J2270</span>
+            <span class="just-type">HCPCS</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Pain management medication</div>
+            <div class="just-row"><strong>Guideline:</strong> HCPCS 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The code J2270 might be used for pain management medications often prescribed post-operatively.</div>
+            
+            
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">J2405</span>
+            <span class="just-type">HCPCS</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Antiemetic administration</div>
+            <div class="just-row"><strong>Guideline:</strong> HCPCS 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The patient&#x27;s history of nausea and vomiting supports the use of antiemetics, which aligns with code J2405.</div>
+            
+            
+          </div>
+        </div>
+  </section>
+
+  <section id="scores">
+    <h3>Confidence & Risk Scores</h3>
+    
+        <div class="scores-grid">
+          
+    <div class="score-row">
+      <span class="score-label">Overall Coding Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:91.5%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">91.5%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">ICD-10 Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:91.5%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">91.5%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">CPT Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:91.5%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">91.5%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">HCPCS Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:91.5%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">91.5%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">Compliance Risk Score</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:25.0%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">25.0%</span>
+    </div>
+          
+          
+    <div class="score-row">
+      <span class="score-label">Clinical vs Revenue Agreement</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:75.0%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">75.0%</span>
+    </div>
+        </div>
+        <div class="risk-label" style="color:#166534;background:#dcfce7">
+          Risk Level: LOW
+        </div>
+  </section>
+
+  <section id="recommendations">
+    <h3>Recommendations</h3>
+    <ul class='rec-list'><li>Consider missed codes: {&#x27;99238&#x27;: &#x27;Discharge day management, 30 minutes or more&#x27;}</li><li>HIGH RISK – Verify documentation supports only 44950 and no additional CPT codes</li></ul>
+  </section>
+
+  <section id="summary">
+    <h3>Audit Summary</h3>
+    <div class="audit-summary-text">The clinical agent&#x27;s code for ICD-10 was more specific and accurate. Both agents agreed on most CPT and HCPCS codes.
+
+Automated audit completed. Review all high-severity findings before submission.</div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function switchTab(tab, paneId) {
+  document.querySelectorAll('.agent-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.agent-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+}
+
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks  = document.querySelectorAll('nav a');
+const observer  = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const active = document.querySelector('nav a[href="#' + e.target.id + '"]');
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-40% 0px -55% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
