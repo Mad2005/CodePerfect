@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="slides-format" content="viewport">
+    <title>CodePerfect – Virtusa Hackathon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --color-bg: #0a0e1a;
+            --color-bg-deep: #05070f;
+            --color-surface: #111827;
+            --color-text: #f0f4ff;
+            --color-text-secondary: #c7d2fe;
+            --color-text-muted: #6b7eab;
+            --color-accent-1: #818cf8;
+            --color-accent-2: #38bdf8;
+            --color-accent-3: #a78bfa;
+            --color-glass-bg: rgba(255,255,255,0.05);
+            --color-glass-border: rgba(255,255,255,0.09);
+            --color-vignette: rgba(0,0,0,0.5);
+            --font-display: 'Instrument Serif', Georgia, serif;
+            --font-body: 'Inter', system-ui, sans-serif;
+        }
+    </style>
+    <style>
+        :root { --color-bg: #0a0e1a; --color-text: #f0f4ff; --glow-color-rgb: 129,140,248; }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { background: var(--color-bg); margin: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; color: var(--color-text); overflow: hidden; height: 100vh; width: 100vw; }
+        .deck { width: 100vw; height: 100vh; position: relative; }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--color-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transform: scale(0.95); transition: opacity 0.7s ease, transform 0.7s ease; pointer-events: none; overflow: hidden; }
+        .slide.active { opacity: 1; transform: scale(1); pointer-events: all; }
+        .slide > .content { position: relative; z-index: 2; width: 100%; max-width: 1100px; padding: clamp(1.5rem, 4vw, 4rem); }
+        .nav-controls { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; z-index: 100; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 10px 24px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.09); }
+        .nav-btn { width: 38px; height: 38px; border: none; background: rgba(255,255,255,0.06); color: #818cf8; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+        .nav-btn:hover { background: rgba(255,255,255,0.12); }
+        .slide-dots { display: flex; gap: 8px; }
+        .slide-dots .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,0.15); cursor: pointer; transition: background 0.3s, transform 0.3s; }
+        .slide-dots .dot.active { background: #818cf8; transform: scale(1.35); }
+        .slide-counter { font-size: 0.78rem; color: #6b7eab; min-width: 40px; text-align: center; }
+        .reveal { opacity: 0; transform: translateY(20px); }
+
+        .text-glow { text-shadow: 0 0 20px rgba(129,140,248,0.55), 0 0 40px rgba(129,140,248,0.2); }
+        .stat-glow { text-shadow: 0 0 30px rgba(129,140,248,0.65), 0 0 60px rgba(129,140,248,0.25); }
+        @keyframes glow-pulse {
+            0%, 100% { text-shadow: 0 0 20px rgba(129,140,248,0.5), 0 0 40px rgba(129,140,248,0.2); }
+            50% { text-shadow: 0 0 30px rgba(129,140,248,0.85), 0 0 60px rgba(129,140,248,0.35); }
+        }
+        .glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+        @keyframes float-slow {
+            0% { transform: translate(0,0) scale(1); }
+            25% { transform: translate(60px,-50px) scale(1.12); }
+            50% { transform: translate(-40px,40px) scale(0.9); }
+            75% { transform: translate(50px,20px) scale(1.08); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+        @keyframes float-drift {
+            0% { transform: translate(0,0) scale(1) rotate(0deg); }
+            33% { transform: translate(-50px,-60px) scale(1.15) rotate(3deg); }
+            66% { transform: translate(40px,30px) scale(0.88) rotate(-2deg); }
+            100% { transform: translate(0,0) scale(1) rotate(0deg); }
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+        .gradient-mesh { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(90px); animation: float-slow 10s ease-in-out infinite; }
+        .blob:nth-child(2) { animation: float-drift 14s ease-in-out infinite; }
+        .blob:nth-child(3) { animation: float-slow 18s ease-in-out infinite reverse; }
+        .blob:nth-child(4) { animation: float-drift 22s ease-in-out infinite reverse; }
+        .slide::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); background-repeat: repeat; background-size: 256px 256px; opacity: 0.03; mix-blend-mode: overlay; }
+        .slide::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%); }
+
+        /* Bar fills */
+        .bar-fill { height: 100%; border-radius: 4px; width: 0%; transition: none; }
+        .bar-track { background: rgba(255,255,255,0.07); border-radius: 6px; height: 10px; overflow: hidden; flex: 1; }
+
+        /* Pipeline flow */
+        .pipe-node { background: rgba(129,140,248,0.1); border: 1px solid rgba(129,140,248,0.25); border-radius: 12px; padding: 0.75rem 1rem; text-align: center; position: relative; }
+        .pipe-arrow { color: #818cf8; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; }
+
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; } }
+    </style>
+</head>
+<body>
+<div class="mouse-spotlight" style="position:fixed;inset:0;z-index:99;pointer-events:none;"></div>
+
+<div class="deck">
+
+<!-- ═══════════════════════════════════════
+     SLIDE 1 — TITLE
+═══════════════════════════════════════ -->
+<div class="slide slide-1 active" data-slide="1">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:520px;height:520px;top:-120px;right:-80px;background:#818cf8;opacity:0.14;"></div>
+        <div class="blob" style="width:380px;height:380px;bottom:-100px;left:-60px;background:#38bdf8;opacity:0.11;"></div>
+        <div class="blob" style="width:260px;height:260px;top:40%;left:20%;background:#a78bfa;opacity:0.09;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content text-center">
+        <div style="font-size:90px;margin-bottom:1rem;animation:float 3s ease-in-out infinite;" class="reveal">🏥</div>
+        <h1 class="font-display reveal" style="font-size:clamp(3rem,7vw,5.5rem);font-weight:900;background:linear-gradient(135deg,#818cf8,#38bdf8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.02em;margin-bottom:0.6rem;">CodePerfect</h1>
+        <p class="reveal" style="font-size:clamp(0.95rem,1.6vw,1.3rem);color:#6b7eab;letter-spacing:5px;text-transform:uppercase;font-weight:300;margin-bottom:1.2rem;">Agentic AI for Medical Coding Compliance</p>
+        <div class="reveal" style="display:inline-flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-top:0.5rem;">
+            <span style="background:rgba(129,140,248,0.12);border:1px solid rgba(129,140,248,0.3);border-radius:20px;padding:0.35rem 1rem;font-size:0.8rem;color:#c7d2fe;">Virtusa Hackathon 2026</span>
+            <span style="background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);border-radius:20px;padding:0.35rem 1rem;font-size:0.8rem;color:#c7d2fe;">Use Case 2</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 2 — THE PROBLEM
+═══════════════════════════════════════ -->
+<div class="slide slide-2" data-slide="2">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:350px;height:350px;top:-60px;right:-60px;background:#818cf8;opacity:0.08;"></div>
+        <div class="blob" style="width:250px;height:250px;bottom:-50px;left:-40px;background:#38bdf8;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="font-size:0.8rem;color:#818cf8;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">The Problem</p>
+        <h2 class="font-display reveal" style="font-size:clamp(2rem,4vw,3rem);font-weight:700;margin-bottom:1.8rem;color:#f0f4ff;">Medical Coding is Broken</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
+            <div class="reveal" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-left:4px solid #ef4444;border-radius:12px;padding:1.2rem 1.4rem;">
+                <div style="font-size:2.2rem;font-weight:900;color:#ef4444;font-family:'Inter',sans-serif;" class="stat-num" data-target="5">0</div>
+                <div style="font-size:0.78rem;text-transform:uppercase;letter-spacing:2px;color:#fca5a5;margin-top:0.2rem;">% Net Revenue Lost to Downcoding</div>
+                <div style="font-size:0.85rem;color:#f87171;margin-top:0.5rem;">Hospitals systemically under-bill due to missed codes — billions in uncaptured revenue annually</div>
+            </div>
+            <div class="reveal" style="background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-left:4px solid #f97316;border-radius:12px;padding:1.2rem 1.4rem;">
+                <div style="font-size:2.2rem;font-weight:900;color:#f97316;font-family:'Inter',sans-serif;" class="stat-num" data-target="60">0</div>
+                <div style="font-size:0.78rem;text-transform:uppercase;letter-spacing:2px;color:#fed7aa;margin-top:0.2rem;">% Codes Contain Errors</div>
+                <div style="font-size:0.85rem;color:#fb923c;margin-top:0.5rem;">40–60% of manual codes have errors — triggering audits, denials, and regulatory fines</div>
+            </div>
+            <div class="reveal" style="background:rgba(129,140,248,0.07);border:1px solid rgba(129,140,248,0.18);border-left:4px solid #818cf8;border-radius:12px;padding:1.2rem 1.4rem;">
+                <div style="font-size:2.2rem;font-weight:900;color:#818cf8;font-family:'Inter',sans-serif;">15 min</div>
+                <div style="font-size:0.78rem;text-transform:uppercase;letter-spacing:2px;color:#c7d2fe;margin-top:0.2rem;">Per Patient Encounter (Manual)</div>
+                <div style="font-size:0.85rem;color:#a5b4fc;margin-top:0.5rem;">Human coders fatigued by high volumes and constantly changing ICD-10 / CPT guidelines</div>
+            </div>
+            <div class="reveal" style="background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.18);border-left:4px solid #a78bfa;border-radius:12px;padding:1.2rem 1.4rem;">
+                <div style="font-size:2.2rem;font-weight:900;color:#a78bfa;font-family:'Inter',sans-serif;">$68B</div>
+                <div style="font-size:0.78rem;text-transform:uppercase;letter-spacing:2px;color:#ddd6fe;margin-top:0.2rem;">Annual Healthcare Billing Fraud (US)</div>
+                <div style="font-size:0.85rem;color:#c4b5fd;margin-top:0.5rem;">Upcoding fraud costs payers &amp; taxpayers billions — manual review can't keep pace</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 3 — OUR SOLUTION
+═══════════════════════════════════════ -->
+<div class="slide slide-3" data-slide="3">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:400px;height:400px;top:-80px;left:-80px;background:#38bdf8;opacity:0.09;"></div>
+        <div class="blob" style="width:300px;height:300px;bottom:-60px;right:-50px;background:#818cf8;opacity:0.07;"></div>
+    </div>
+    <canvas class="particle-canvas-ambient" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content text-center">
+        <p class="reveal" style="font-size:0.8rem;color:#38bdf8;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">The Solution</p>
+        <h2 class="font-display reveal" style="font-size:clamp(2rem,4.5vw,3.4rem);font-weight:700;margin-bottom:0.8rem;background:linear-gradient(135deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">A Real-Time Agentic Auditor</h2>
+        <p class="reveal" style="font-size:1.05rem;color:#c7d2fe;max-width:700px;margin:0 auto 1.8rem;line-height:1.6;">CodePerfect deploys a <strong style="color:#f0f4ff;">multi-agent AI pipeline</strong> that independently reads clinical charts, assigns billing codes, cross-references with human coders, and flags every discrepancy — with precise clinical citations.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;max-width:860px;margin:0 auto;">
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:1.4rem 1rem;transition:transform 0.3s,box-shadow 0.3s;" onmouseenter="this.style.transform='translateY(-5px)';this.style.boxShadow='0 12px 40px rgba(129,140,248,0.2)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+                <div style="font-size:2.4rem;margin-bottom:0.6rem;">⚡</div>
+                <div style="font-weight:700;color:#f0f4ff;margin-bottom:0.3rem;">10–30 sec</div>
+                <div style="font-size:0.82rem;color:#6b7eab;">Per note vs. 15 min manual</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:1.4rem 1rem;transition:transform 0.3s,box-shadow 0.3s;" onmouseenter="this.style.transform='translateY(-5px)';this.style.boxShadow='0 12px 40px rgba(56,189,248,0.2)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+                <div style="font-size:2.4rem;margin-bottom:0.6rem;">🎯</div>
+                <div style="font-weight:700;color:#f0f4ff;margin-bottom:0.3rem;">85–92%</div>
+                <div style="font-size:0.82rem;color:#6b7eab;">Accuracy on routine cases</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:1.4rem 1rem;transition:transform 0.3s,box-shadow 0.3s;" onmouseenter="this.style.transform='translateY(-5px)';this.style.boxShadow='0 12px 40px rgba(167,139,250,0.2)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+                <div style="font-size:2.4rem;margin-bottom:0.6rem;">🛡️</div>
+                <div style="font-weight:700;color:#f0f4ff;margin-bottom:0.3rem;">Zero</div>
+                <div style="font-size:0.82rem;color:#6b7eab;">NCCI/MUE/LCD violations</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 4 — WHY AGENTIC AI
+═══════════════════════════════════════ -->
+<div class="slide slide-4" data-slide="4">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:380px;height:380px;top:-70px;right:-70px;background:#a78bfa;opacity:0.09;"></div>
+        <div class="blob" style="width:260px;height:260px;bottom:-50px;left:-40px;background:#818cf8;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="font-size:0.8rem;color:#a78bfa;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">Why Agentic AI?</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;margin-bottom:1.4rem;color:#f0f4ff;">Single LLM Prompts Are Not Enough</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
+            <div class="reveal" style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:1.2rem;">
+                <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.7rem;">
+                    <span style="font-size:1.4rem;">❌</span>
+                    <span style="font-weight:600;color:#fca5a5;font-size:0.95rem;">Single Prompt Approach</span>
+                </div>
+                <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">
+                    <li style="font-size:0.85rem;color:#f87171;">• No separation of medical understanding vs. compliance logic</li>
+                    <li style="font-size:0.85rem;color:#f87171;">• Cannot debate or self-correct conflicting interpretations</li>
+                    <li style="font-size:0.85rem;color:#f87171;">• No peer-review simulation — single point of failure</li>
+                    <li style="font-size:0.85rem;color:#f87171;">• Hallucinations go undetected without a rule-keeper agent</li>
+                </ul>
+            </div>
+            <div class="reveal" style="background:rgba(129,140,248,0.07);border:1px solid rgba(129,140,248,0.22);border-radius:12px;padding:1.2rem;">
+                <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.7rem;">
+                    <span style="font-size:1.4rem;">✅</span>
+                    <span style="font-weight:600;color:#a5b4fc;font-size:0.95rem;">Agentic Workflow (CodePerfect)</span>
+                </div>
+                <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem;">
+                    <li style="font-size:0.85rem;color:#c7d2fe;">• <strong style="color:#f0f4ff;">Reader Agent</strong> — deep medical NLP understanding</li>
+                    <li style="font-size:0.85rem;color:#c7d2fe;">• <strong style="color:#f0f4ff;">Rule-Keeper Agent</strong> — NCCI/MUE/LCD compliance logic</li>
+                    <li style="font-size:0.85rem;color:#c7d2fe;">• <strong style="color:#f0f4ff;">Debate Agent</strong> — resolves conflicts like a peer-review board</li>
+                    <li style="font-size:0.85rem;color:#c7d2fe;">• <strong style="color:#f0f4ff;">Auditor Agent</strong> — AI vs. human comparison with citations</li>
+                </ul>
+            </div>
+        </div>
+        <div class="reveal" style="margin-top:1.2rem;background:rgba(129,140,248,0.06);border:1px solid rgba(129,140,248,0.15);border-radius:10px;padding:0.9rem 1.2rem;font-size:0.88rem;color:#c7d2fe;font-style:italic;">
+            💡 <strong style="color:#f0f4ff;">Key Insight:</strong> Accurate coding requires a "Reader" (medical understanding) and a separate "Rule Keeper" (compliance logic) — agents collaborate to debate the correct code based on evidence, simulating the peer-review process no single prompt can achieve.
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 5 — AGENTIC WORKFLOW PIPELINE
+═══════════════════════════════════════ -->
+<div class="slide slide-5" data-slide="5">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:350px;height:350px;top:-60px;left:-60px;background:#38bdf8;opacity:0.08;"></div>
+        <div class="blob" style="width:280px;height:280px;bottom:-50px;right:-50px;background:#818cf8;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="font-size:0.8rem;color:#38bdf8;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">Workflow</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:700;margin-bottom:1.4rem;color:#f0f4ff;">5-Agent Pipeline Architecture</h2>
+        <div style="display:flex;align-items:stretch;gap:0;width:100%;" class="reveal">
+            <div style="flex:1;background:rgba(56,189,248,0.09);border:1px solid rgba(56,189,248,0.22);border-radius:12px 0 0 12px;padding:1rem 0.8rem;text-align:center;">
+                <div style="font-size:1.8rem;margin-bottom:0.4rem;">📥</div>
+                <div style="font-weight:700;font-size:0.82rem;color:#7dd3fc;margin-bottom:0.25rem;">Ingestion Agent</div>
+                <div style="font-size:0.72rem;color:#6b7eab;line-height:1.4;">Reads discharge summaries &amp; clinical notes</div>
+            </div>
+            <div style="display:flex;align-items:center;padding:0 0.3rem;color:#818cf8;font-size:1.3rem;">→</div>
+            <div style="flex:1;background:rgba(129,140,248,0.09);border:1px solid rgba(129,140,248,0.22);border-top:1px solid rgba(129,140,248,0.22);border-bottom:1px solid rgba(129,140,248,0.22);padding:1rem 0.8rem;text-align:center;">
+                <div style="font-size:1.8rem;margin-bottom:0.4rem;">🔬</div>
+                <div style="font-weight:700;font-size:0.82rem;color:#a5b4fc;margin-bottom:0.25rem;">Clinical Extraction</div>
+                <div style="font-size:0.72rem;color:#6b7eab;line-height:1.4;">Identifies procedures, diagnoses &amp; comorbidities</div>
+            </div>
+            <div style="display:flex;align-items:center;padding:0 0.3rem;color:#818cf8;font-size:1.3rem;">→</div>
+            <div style="flex:1;background:rgba(167,139,250,0.09);border:1px solid rgba(167,139,250,0.22);border-top:1px solid rgba(167,139,250,0.22);border-bottom:1px solid rgba(167,139,250,0.22);padding:1rem 0.8rem;text-align:center;">
+                <div style="font-size:1.8rem;margin-bottom:0.4rem;">🏷️</div>
+                <div style="font-weight:700;font-size:0.82rem;color:#c4b5fd;margin-bottom:0.25rem;">Coding Agent</div>
+                <div style="font-size:0.72rem;color:#6b7eab;line-height:1.4;">Assigns ICD-10 &amp; CPT codes via LLM + RAG</div>
+            </div>
+            <div style="display:flex;align-items:center;padding:0 0.3rem;color:#818cf8;font-size:1.3rem;">→</div>
+            <div style="flex:1;background:rgba(129,140,248,0.09);border:1px solid rgba(129,140,248,0.22);border-top:1px solid rgba(129,140,248,0.22);border-bottom:1px solid rgba(129,140,248,0.22);padding:1rem 0.8rem;text-align:center;">
+                <div style="font-size:1.8rem;margin-bottom:0.4rem;">🔎</div>
+                <div style="font-weight:700;font-size:0.82rem;color:#a5b4fc;margin-bottom:0.25rem;">Auditor Agent</div>
+                <div style="font-size:0.72rem;color:#6b7eab;line-height:1.4;">Compares AI vs. human codes; flags discrepancies</div>
+            </div>
+            <div style="display:flex;align-items:center;padding:0 0.3rem;color:#818cf8;font-size:1.3rem;">→</div>
+            <div style="flex:1;background:rgba(56,189,248,0.09);border:1px solid rgba(56,189,248,0.22);border-radius:0 12px 12px 0;padding:1rem 0.8rem;text-align:center;">
+                <div style="font-size:1.8rem;margin-bottom:0.4rem;">📋</div>
+                <div style="font-weight:700;font-size:0.82rem;color:#7dd3fc;margin-bottom:0.25rem;">Justification Agent</div>
+                <div style="font-size:0.72rem;color:#6b7eab;line-height:1.4;">Cites clinical evidence for every code selected</div>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.9rem;margin-top:1.1rem;">
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:0.8rem 1rem;">
+                <div style="font-size:0.75rem;color:#38bdf8;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:0.3rem;">Data Sources</div>
+                <div style="font-size:0.8rem;color:#c7d2fe;">Unstructured clinical notes (surgical/inpatient), ICD-10 &amp; CPT code sets, NCCI Edits, historical claims data</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:0.8rem 1rem;">
+                <div style="font-size:0.75rem;color:#818cf8;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:0.3rem;">Orchestration</div>
+                <div style="font-size:0.8rem;color:#c7d2fe;">LangGraph multi-agent graph with parallel execution, SQLite checkpointing &amp; fault recovery</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:0.8rem 1rem;">
+                <div style="font-size:0.75rem;color:#a78bfa;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:0.3rem;">Vector Knowledge</div>
+                <div style="font-size:0.8rem;color:#c7d2fe;">ChromaDB with 8 collections — ICD-10, CPT, HCPCS, SNOMED CT, NCCI, MUE, LCD, NCD rules</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 6 — DUAL CODING AGENTS
+═══════════════════════════════════════ -->
+<div class="slide slide-6" data-slide="6">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:360px;height:360px;top:-70px;right:-70px;background:#818cf8;opacity:0.09;"></div>
+        <div class="blob" style="width:240px;height:240px;bottom:-50px;left:-40px;background:#38bdf8;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="font-size:0.8rem;color:#818cf8;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">Dual Coding Strategy</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:700;margin-bottom:1.3rem;color:#f0f4ff;">Clinical Accuracy vs. Revenue Optimization</h2>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:center;">
+            <div class="reveal" style="background:rgba(56,189,248,0.07);border:1px solid rgba(56,189,248,0.22);border-radius:14px;padding:1.3rem;">
+                <div style="font-size:1.6rem;margin-bottom:0.5rem;">🩺</div>
+                <div style="font-weight:700;color:#7dd3fc;margin-bottom:0.5rem;font-size:0.95rem;">Clinical Accuracy Agent</div>
+                <div style="font-size:0.82rem;color:#c7d2fe;line-height:1.5;margin-bottom:0.6rem;">Maps diagnoses to ICD-10 codes. Prioritizes clinical correctness over revenue. Assigns principal vs. secondary diagnosis sequence.</div>
+                <div style="background:rgba(56,189,248,0.1);border-radius:8px;padding:0.5rem 0.7rem;font-size:0.78rem;color:#7dd3fc;font-family:'Inter',monospace;">Output: E11.9, I10, I21.02 → confidence 0.94</div>
+            </div>
+            <div class="reveal" style="text-align:center;">
+                <div style="background:rgba(129,140,248,0.15);border:2px solid rgba(129,140,248,0.4);border-radius:50%;width:56px;height:56px;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:1.2rem;" title="Debate Agent">⚖️</div>
+                <div style="font-size:0.72rem;color:#818cf8;margin-top:0.4rem;font-weight:600;">DEBATE<br>AGENT</div>
+            </div>
+            <div class="reveal" style="background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.22);border-radius:14px;padding:1.3rem;">
+                <div style="font-size:1.6rem;margin-bottom:0.5rem;">💰</div>
+                <div style="font-weight:700;color:#c4b5fd;margin-bottom:0.5rem;font-size:0.95rem;">Revenue Optimization Agent</div>
+                <div style="font-size:0.82rem;color:#c7d2fe;line-height:1.5;margin-bottom:0.6rem;">Maps procedures to CPT and drugs to HCPCS codes. Maximizes legitimate reimbursement. Applies bundling rules to prevent double-billing.</div>
+                <div style="background:rgba(167,139,250,0.1);border-radius:8px;padding:0.5rem 0.7rem;font-size:0.78rem;color:#c4b5fd;font-family:'Inter',monospace;">Output: 99215, 92982, J1100 → units validated</div>
+            </div>
+        </div>
+        <div class="reveal" style="margin-top:1rem;background:rgba(129,140,248,0.06);border:1px solid rgba(129,140,248,0.15);border-radius:10px;padding:0.8rem 1.2rem;font-size:0.85rem;color:#c7d2fe;">
+            ⚖️ <strong style="color:#f0f4ff;">Debate Resolution:</strong> When agents conflict (e.g., 99213 vs 99215), the Debate Agent reviews documentation evidence and selects the defensible code — preventing both undercoding and fraudulent upcoding.
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 7 — GUARDRAILS (9 LAYERS)
+═══════════════════════════════════════ -->
+<div class="slide slide-7" data-slide="7">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:380px;height:380px;top:-70px;left:-60px;background:#818cf8;opacity:0.08;"></div>
+        <div class="blob" style="width:260px;height:260px;bottom:-50px;right:-40px;background:#a78bfa;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="font-size:0.8rem;color:#a78bfa;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">Compliance Guardrails</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,3.5vw,2.5rem);font-weight:700;margin-bottom:1.2rem;color:#f0f4ff;">9-Layer Guardrail System</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.7rem;">
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:0.85rem;display:flex;align-items:flex-start;gap:0.6rem;">
+                <span style="background:linear-gradient(135deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:1rem;min-width:22px;">L1</span>
+                <div><div style="font-size:0.8rem;font-weight:600;color:#f0f4ff;">Vector Rule Base</div><div style="font-size:0.72rem;color:#6b7eab;">Official CMS/SNOMED codes only via ChromaDB</div></div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:0.85rem;display:flex;align-items:flex-start;gap:0.6rem;">
+                <span style="background:linear-gradient(135deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:1rem;min-width:22px;">L2</span>
+                <div><div style="font-size:0.8rem;font-weight:600;color:#f0f4ff;">Confidence Threshold</div><div style="font-size:0.72rem;color:#6b7eab;">Codes &lt;0.65 confidence auto-flagged for review</div></div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:0.85rem;display:flex;align-items:flex-start;gap:0.6rem;">
+                <span style="background:linear-gradient(135deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:1rem;min-width:22px;">L3</span>
+                <div><div style="font-size:0.8rem;font-weight:600;color:#f0f4ff;">NCCI PTP Edits</div><div style="font-size:0.72rem;color:#6b7eab;">Blocks forbidden CPT code combinations</div></div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:0.85rem;display:flex;align-items:flex-start;gap:0.6rem;">
+                <span style="background:linear-gradient(135deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:1rem;min-width:22px;">L4</span>
+                <div><div style="font-size:0.8rem;font-weight:600;color:#f0f4ff;">MUE Unit Limits</div><div style="font-size:0.72rem;color:#6b7eab;">Deterministic max-units-per-day DB check</div></div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:0.85rem;display:flex;align-items:flex-start;gap:0.6rem;">
+                <span style="background:linear-gradient(135deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:1rem;min-width:22px;">L5</span>
+                <div><div style="font-size:0.8rem;font-weight:600;color:#f0f4ff;">LCD/NCD Coverage</div><div style="font-size:0.72rem;color:#6b7eab;">Context-aware regional/national Medicare rules</div></div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:0.85rem;display:flex;align-items:flex-start;gap:0.6rem;">
+                <span style="background:linear-gradient(135deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:1rem;min-width:22px;">L6</span>
+                <div><div style="font-size:0.8rem;font-weight:600;color:#f0f4ff;">Missed Code Detection</div><div style="font-size:0.72rem;color:#6b7eab;">Flags documented services that weren't coded</div></div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:0.85rem;display:flex;align-items:flex-start;gap:0.6rem;">
+                <span style="background:linear-gradient(135deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:1rem;min-width:22px;">L7</span>
+                <div><div style="font-size:0.8rem;font-weight:600;color:#f0f4ff;">Auditor Patterns</div><div style="font-size:0.72rem;color:#6b7eab;">Detects upcoding/downcoding patterns</div></div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:0.85rem;display:flex;align-items:flex-start;gap:0.6rem;">
+                <span style="background:linear-gradient(135deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:1rem;min-width:22px;">L8</span>
+                <div><div style="font-size:0.8rem;font-weight:600;color:#f0f4ff;">Justification Links</div><div style="font-size:0.72rem;color:#6b7eab;">Every code has cited clinical evidence</div></div>
+            </div>
+            <div class="reveal" style="background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.25);border-radius:10px;padding:0.85rem;display:flex;align-items:flex-start;gap:0.6rem;">
+                <span style="background:linear-gradient(135deg,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;font-size:1rem;min-width:22px;">L9</span>
+                <div><div style="font-size:0.8rem;font-weight:600;color:#f0f4ff;">Human Review Loop</div><div style="font-size:0.72rem;color:#6b7eab;">Assisted mode for manual verification before billing</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 8 — TECH STACK
+═══════════════════════════════════════ -->
+<div class="slide slide-8" data-slide="8">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:400px;height:400px;top:-80px;right:-70px;background:#38bdf8;opacity:0.09;"></div>
+        <div class="blob" style="width:280px;height:280px;bottom:-60px;left:-50px;background:#818cf8;opacity:0.08;"></div>
+    </div>
+    <canvas class="particle-canvas-ambient" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content">
+        <p class="reveal" style="font-size:0.8rem;color:#38bdf8;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">Tech Stack</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:700;margin-bottom:1.3rem;color:#f0f4ff;">Built for Speed, Scale &amp; Compliance</h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(129,140,248,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.6rem;margin-bottom:0.5rem;">🧠</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.3rem;">LLM — GROQ + Llama 4</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">100–200ms inference · 2–5x cheaper than GPT-4 · JSON mode for deterministic output</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(56,189,248,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.6rem;margin-bottom:0.5rem;">🕸️</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.3rem;">LangGraph Orchestration</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">12-node graph · parallel execution · SQLite fault recovery · thread-safe checkpointing</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(167,139,250,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.6rem;margin-bottom:0.5rem;">🗄️</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.3rem;">ChromaDB — Vector Store</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">8 collections · 100K+ codes · semantic search · ICD-10, CPT, HCPCS, NCCI, MUE, LCD/NCD</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(129,140,248,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.6rem;margin-bottom:0.5rem;">🧬</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.3rem;">BioBERT NLP</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">Biomedical NER for precision entity extraction · dual-pathway with LLM</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(56,189,248,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.6rem;margin-bottom:0.5rem;">💊</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.3rem;">NLM RxNorm API</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">Real-time medication enrichment · RxCUI, drug class, NDC codes, branded names</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(167,139,250,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.6rem;margin-bottom:0.5rem;">🌐</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.3rem;">Flask + Tailwind UI</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">REST API · responsive web UI · Auto + Assisted Coding modes · JSON reports</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 9 — OPERATING MODES
+═══════════════════════════════════════ -->
+<div class="slide slide-9" data-slide="9">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:360px;height:360px;top:-70px;right:-60px;background:#a78bfa;opacity:0.09;"></div>
+        <div class="blob" style="width:240px;height:240px;bottom:-50px;left:-40px;background:#38bdf8;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="font-size:0.8rem;color:#a78bfa;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">Operating Modes</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:700;margin-bottom:1.3rem;color:#f0f4ff;">Two Ways to Deploy CodePerfect</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;">
+            <div class="reveal" style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.2);border-radius:14px;padding:1.4rem;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform=''">
+                <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:1rem;">
+                    <span style="font-size:1.8rem;">🤖</span>
+                    <div>
+                        <div style="font-weight:700;color:#7dd3fc;font-size:1rem;">Auto Coding Mode</div>
+                        <div style="font-size:0.75rem;color:#6b7eab;">Fully autonomous — no human input required</div>
+                    </div>
+                </div>
+                <div style="font-size:0.84rem;color:#c7d2fe;line-height:1.6;margin-bottom:0.8rem;">Upload a clinical note → system automatically generates all ICD-10, CPT, and HCPCS codes with justifications and compliance checks in under 30 seconds.</div>
+                <div style="background:rgba(56,189,248,0.08);border-radius:8px;padding:0.6rem 0.9rem;font-size:0.78rem;color:#7dd3fc;font-family:monospace;">POST /api/auto-coding → compliance report JSON</div>
+            </div>
+            <div class="reveal" style="background:rgba(129,140,248,0.06);border:1px solid rgba(129,140,248,0.2);border-radius:14px;padding:1.4rem;" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform=''">
+                <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:1rem;">
+                    <span style="font-size:1.8rem;">👥</span>
+                    <div>
+                        <div style="font-weight:700;color:#a5b4fc;font-size:1rem;">Assisted Coding Mode</div>
+                        <div style="font-size:0.75rem;color:#6b7eab;">Human-in-the-loop peer review workflow</div>
+                    </div>
+                </div>
+                <div style="font-size:0.84rem;color:#c7d2fe;line-height:1.6;margin-bottom:0.8rem;">Coder submits their codes alongside the note. AI compares, finds exact matches, partial matches, missed codes, and complexity differences — with verdict reasoning.</div>
+                <div style="background:rgba(129,140,248,0.08);border-radius:8px;padding:0.6rem 0.9rem;font-size:0.78rem;color:#a5b4fc;font-family:monospace;">POST /api/assisted-coding → comparison + verdicts</div>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-top:1.1rem;">
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:0.7rem;text-align:center;">
+                <div style="font-size:1.2rem;font-weight:800;color:#818cf8;" data-count="3">0</div>
+                <div style="font-size:0.7rem;color:#6b7eab;text-transform:uppercase;letter-spacing:1px;">Exact Matches</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:0.7rem;text-align:center;">
+                <div style="font-size:1.2rem;font-weight:800;color:#38bdf8;" data-count="1">0</div>
+                <div style="font-size:0.7rem;color:#6b7eab;text-transform:uppercase;letter-spacing:1px;">Partial Match</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:0.7rem;text-align:center;">
+                <div style="font-size:1.2rem;font-weight:800;color:#f97316;" data-count="0">0</div>
+                <div style="font-size:0.7rem;color:#6b7eab;text-transform:uppercase;letter-spacing:1px;">AI Missed</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:0.7rem;text-align:center;">
+                <div style="font-size:1.2rem;font-weight:800;color:#ef4444;" data-count="3">0</div>
+                <div style="font-size:0.7rem;color:#6b7eab;text-transform:uppercase;letter-spacing:1px;">Human Missed</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 10 — FAULT TOLERANCE
+═══════════════════════════════════════ -->
+<div class="slide slide-10" data-slide="10">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:380px;height:380px;top:-70px;left:-60px;background:#818cf8;opacity:0.08;"></div>
+        <div class="blob" style="width:260px;height:260px;bottom:-50px;right:-40px;background:#38bdf8;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="font-size:0.8rem;color:#818cf8;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">Reliability</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:700;margin-bottom:1.3rem;color:#f0f4ff;">LangGraph Checkpointing &amp; Fault Recovery</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.3rem;align-items:start;">
+            <div>
+                <div class="reveal" style="font-size:0.85rem;color:#c7d2fe;margin-bottom:1rem;line-height:1.5;">The pipeline saves state after every one of the <strong style="color:#f0f4ff;">12 agent nodes</strong> using SQLite-backed LangGraph checkpointing. A pipeline crash mid-run resumes exactly from the last completed node — skipping already-processed work.</div>
+                <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                    <div class="reveal" style="display:flex;align-items:center;gap:0.6rem;">
+                        <span style="width:10px;height:10px;border-radius:50%;background:#22c55e;flex-shrink:0;box-shadow:0 0 8px rgba(34,197,94,0.6);"></span>
+                        <span style="font-size:0.8rem;color:#c7d2fe;">text_processing → nlp_extraction → terminology_mapping</span>
+                    </div>
+                    <div class="reveal" style="display:flex;align-items:center;gap:0.6rem;">
+                        <span style="width:10px;height:10px;border-radius:50%;background:#22c55e;flex-shrink:0;box-shadow:0 0 8px rgba(34,197,94,0.6);"></span>
+                        <span style="font-size:0.8rem;color:#c7d2fe;">knowledge_retrieval → [clinical + revenue parallel]</span>
+                    </div>
+                    <div class="reveal" style="display:flex;align-items:center;gap:0.6rem;">
+                        <span style="width:10px;height:10px;border-radius:50%;background:#22c55e;flex-shrink:0;box-shadow:0 0 8px rgba(34,197,94,0.6);"></span>
+                        <span style="font-size:0.8rem;color:#c7d2fe;">debate_agent → comparison_engine → rule_validation</span>
+                    </div>
+                    <div class="reveal" style="display:flex;align-items:center;gap:0.6rem;">
+                        <span style="width:10px;height:10px;border-radius:50%;background:#f97316;flex-shrink:0;box-shadow:0 0 8px rgba(249,115,22,0.6);"></span>
+                        <span style="font-size:0.8rem;color:#c7d2fe;">auditor ← <em style="color:#fb923c;">crash here?</em> → resumes from checkpoint ✓</span>
+                    </div>
+                    <div class="reveal" style="display:flex;align-items:center;gap:0.6rem;">
+                        <span style="width:10px;height:10px;border-radius:50%;background:#818cf8;flex-shrink:0;box-shadow:0 0 8px rgba(129,140,248,0.6);"></span>
+                        <span style="font-size:0.8rem;color:#c7d2fe;">justification → confidence_scoring → report_generation</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="reveal" style="background:rgba(129,140,248,0.07);border:1px solid rgba(129,140,248,0.2);border-radius:12px;padding:1.1rem;font-family:monospace;font-size:0.75rem;color:#c7d2fe;line-height:1.7;">
+                    <span style="color:#6b7eab;">// Re-run with same thread_id</span><br>
+                    <span style="color:#a5b4fc;">thread_id</span> = <span style="color:#7dd3fc;">"patient_12345_run_1"</span><br>
+                    <span style="color:#6b7eab;">// LangGraph detects checkpoint</span><br>
+                    <span style="color:#6b7eab;">// at rule_validation node</span><br>
+                    <span style="color:#6b7eab;">// Skips 10 completed nodes</span><br>
+                    <span style="color:#22c55e;">// Resumes from: auditor_agent</span><br>
+                    <span style="color:#f0f4ff;">→ Report generated in ~5s ✓</span>
+                </div>
+                <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin-top:0.8rem;">
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:0.7rem;text-align:center;">
+                        <div style="font-size:1.3rem;font-weight:800;color:#818cf8;">12</div>
+                        <div style="font-size:0.68rem;color:#6b7eab;text-transform:uppercase;letter-spacing:1px;">Checkpoint Records</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:0.7rem;text-align:center;">
+                        <div style="font-size:1.3rem;font-weight:800;color:#22c55e;">100%</div>
+                        <div style="font-size:0.68rem;color:#6b7eab;text-transform:uppercase;letter-spacing:1px;">Recovery Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 11 — ENTERPRISE IMPACT
+═══════════════════════════════════════ -->
+<div class="slide slide-11" data-slide="11">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:460px;height:460px;top:-100px;right:-80px;background:#818cf8;opacity:0.12;"></div>
+        <div class="blob" style="width:320px;height:320px;bottom:-80px;left:-60px;background:#38bdf8;opacity:0.09;"></div>
+        <div class="blob" style="width:200px;height:200px;top:35%;left:30%;background:#a78bfa;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="font-size:0.8rem;color:#38bdf8;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">Enterprise Impact</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:700;margin-bottom:1.4rem;color:#f0f4ff;">Immediate, Measurable ROI</h2>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;">
+            <div class="reveal" style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:14px;padding:1.2rem;text-align:center;" onmouseenter="this.style.transform='translateY(-5px)';this.style.boxShadow='0 12px 40px rgba(34,197,94,0.15)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">💵</div>
+                <div style="font-size:1.5rem;font-weight:900;color:#22c55e;font-family:'Inter',sans-serif;" class="glow-pulse">+3–5%</div>
+                <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:#86efac;margin:0.3rem 0;">Revenue Lift</div>
+                <div style="font-size:0.75rem;color:#6b7eab;line-height:1.4;">Capturing missed billable items &amp; eliminating downcoding</div>
+            </div>
+            <div class="reveal" style="background:rgba(56,189,248,0.07);border:1px solid rgba(56,189,248,0.2);border-radius:14px;padding:1.2rem;text-align:center;" onmouseenter="this.style.transform='translateY(-5px)';this.style.boxShadow='0 12px 40px rgba(56,189,248,0.15)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">✅</div>
+                <div style="font-size:1.5rem;font-weight:900;color:#38bdf8;font-family:'Inter',sans-serif;">Zero</div>
+                <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:#7dd3fc;margin:0.3rem 0;">Violation Rate</div>
+                <div style="font-size:0.75rem;color:#6b7eab;line-height:1.4;">Automated compliance assurance with NCCI/MUE/LCD/NCD rules</div>
+            </div>
+            <div class="reveal" style="background:rgba(251,146,60,0.07);border:1px solid rgba(251,146,60,0.2);border-radius:14px;padding:1.2rem;text-align:center;" onmouseenter="this.style.transform='translateY(-5px)';this.style.boxShadow='0 12px 40px rgba(251,146,60,0.15)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">📉</div>
+                <div style="font-size:1.5rem;font-weight:900;color:#fb923c;font-family:'Inter',sans-serif;">↓ Denials</div>
+                <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:#fed7aa;margin:0.3rem 0;">Claim Denial Rate</div>
+                <div style="font-size:0.75rem;color:#6b7eab;line-height:1.4;">Coding errors are the #1 cause of claim denials — eliminated at source</div>
+            </div>
+            <div class="reveal" style="background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.2);border-radius:14px;padding:1.2rem;text-align:center;" onmouseenter="this.style.transform='translateY(-5px)';this.style.boxShadow='0 12px 40px rgba(167,139,250,0.15)'" onmouseleave="this.style.transform='';this.style.boxShadow=''">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">🚀</div>
+                <div style="font-size:1.5rem;font-weight:900;color:#c4b5fd;font-family:'Inter',sans-serif;">30x</div>
+                <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:#ddd6fe;margin:0.3rem 0;">Coder Productivity</div>
+                <div style="font-size:0.75rem;color:#6b7eab;line-height:1.4;">10–30s vs. 15 min per note — coders review AI work instead of coding from scratch</div>
+            </div>
+        </div>
+        <div class="reveal" style="margin-top:1.2rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.9rem;">
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:0.8rem 1rem;border-left:3px solid #818cf8;">
+                <div style="font-size:0.75rem;font-weight:700;color:#a5b4fc;margin-bottom:0.2rem;">Audit Readiness</div>
+                <div style="font-size:0.78rem;color:#6b7eab;">Every code has a clinical citation trail — ready for OIG audit at any time</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:0.8rem 1rem;border-left:3px solid #38bdf8;">
+                <div style="font-size:0.75rem;font-weight:700;color:#7dd3fc;margin-bottom:0.2rem;">Scalability</div>
+                <div style="font-size:0.78rem;color:#6b7eab;">100–200+ notes/hour single instance · multi-instance via load balancer</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:0.8rem 1rem;border-left:3px solid #a78bfa;">
+                <div style="font-size:0.75rem;font-weight:700;color:#c4b5fd;margin-bottom:0.2rem;">No Cloud Lock-in</div>
+                <div style="font-size:0.78rem;color:#6b7eab;">Pure Python · runs on-premise or any cloud · HIPAA-friendly local data store</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 12 — EXAMPLE WALKTHROUGH
+═══════════════════════════════════════ -->
+<div class="slide slide-12" data-slide="12">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:360px;height:360px;top:-70px;right:-60px;background:#818cf8;opacity:0.08;"></div>
+        <div class="blob" style="width:240px;height:240px;bottom:-50px;left:-40px;background:#38bdf8;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="font-size:0.8rem;color:#818cf8;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">Live Example</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,3.5vw,2.4rem);font-weight:700;margin-bottom:1rem;color:#f0f4ff;">MI + Angioplasty — End-to-End</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
+            <div>
+                <div class="reveal" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:0.9rem;font-size:0.8rem;color:#c7d2fe;line-height:1.6;margin-bottom:0.8rem;font-style:italic;">
+                    📄 <strong style="color:#f0f4ff;">Input Note:</strong> "73M w/ T2DM, HTN, acute MI, underwent coronary angioplasty. EKG: ST elevation V1–V4. Troponin 2.5ng/mL. On metformin 500mg BID &amp; insulin glargine."
+                </div>
+                <div class="reveal" style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.18);border-radius:10px;padding:0.9rem;">
+                    <div style="font-size:0.72rem;color:#38bdf8;text-transform:uppercase;letter-spacing:2px;margin-bottom:0.5rem;font-weight:600;">AI Generated Codes</div>
+                    <div style="display:flex;flex-direction:column;gap:0.35rem;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;"><span style="color:#7dd3fc;">I21.02</span><span style="color:#c7d2fe;">STEMI of LAD — principal</span><span style="color:#22c55e;font-weight:600;">0.94</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;"><span style="color:#7dd3fc;">E11.9</span><span style="color:#c7d2fe;">Type 2 DM — secondary</span><span style="color:#22c55e;font-weight:600;">0.95</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;"><span style="color:#7dd3fc;">I10</span><span style="color:#c7d2fe;">Hypertension — secondary</span><span style="color:#22c55e;font-weight:600;">0.90</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;"><span style="color:#a5b4fc;">99215</span><span style="color:#c7d2fe;">Office visit, high complexity</span><span style="color:#22c55e;font-weight:600;">0.88</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;"><span style="color:#a5b4fc;">92982</span><span style="color:#c7d2fe;">Coronary angioplasty</span><span style="color:#22c55e;font-weight:600;">0.90</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;"><span style="color:#c4b5fd;">J1930</span><span style="color:#c7d2fe;">Insulin glargine 100u</span><span style="color:#f97316;font-weight:600;">⚠ MISSED</span></div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="reveal" style="background:rgba(251,146,60,0.06);border:1px solid rgba(251,146,60,0.2);border-radius:10px;padding:0.9rem;margin-bottom:0.8rem;">
+                    <div style="font-size:0.72rem;color:#f97316;text-transform:uppercase;letter-spacing:2px;margin-bottom:0.5rem;font-weight:600;">Human Coder Submitted</div>
+                    <div style="display:flex;flex-direction:column;gap:0.35rem;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;"><span style="color:#fed7aa;">I21.x</span><span style="color:#c7d2fe;">Generic MI</span><span style="color:#f97316;">Less specific</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;"><span style="color:#fed7aa;">E11.9</span><span style="color:#c7d2fe;">Type 2 DM</span><span style="color:#22c55e;">✓ Match</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;"><span style="color:#fed7aa;">I10</span><span style="color:#c7d2fe;">Hypertension</span><span style="color:#22c55e;">✓ Match</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;"><span style="color:#fed7aa;">99213</span><span style="color:#c7d2fe;">Standard visit</span><span style="color:#ef4444;">Undercoded</span></div>
+                    </div>
+                </div>
+                <div class="reveal" style="background:rgba(129,140,248,0.07);border:1px solid rgba(129,140,248,0.2);border-radius:10px;padding:0.9rem;">
+                    <div style="font-size:0.72rem;color:#818cf8;text-transform:uppercase;letter-spacing:2px;margin-bottom:0.5rem;font-weight:600;">Audit Findings</div>
+                    <div style="font-size:0.78rem;color:#c7d2fe;line-height:1.6;">⚠ Missing: <strong style="color:#f0f4ff;">J1930</strong> — insulin documented but not coded<br>
+                    ⚠ Undercoding: <strong style="color:#f0f4ff;">99213→99215</strong> — multi-system complexity justified<br>
+                    ⚠ Specificity: <strong style="color:#f0f4ff;">I21.x→I21.02</strong> — STEMI of LAD documented in EKG<br>
+                    ✅ <strong style="color:#22c55e;">Overall risk: LOW — ready for billing after corrections</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 13 — COMPETITIVE EDGE
+═══════════════════════════════════════ -->
+<div class="slide slide-13" data-slide="13">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:380px;height:380px;top:-70px;left:-60px;background:#a78bfa;opacity:0.09;"></div>
+        <div class="blob" style="width:260px;height:260px;bottom:-50px;right:-40px;background:#818cf8;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="font-size:0.8rem;color:#a78bfa;text-transform:uppercase;letter-spacing:4px;margin-bottom:0.6rem;">Competitive Advantage</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:700;margin-bottom:1.3rem;color:#f0f4ff;">Why CodePerfect Wins</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;transition:all 0.3s;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(129,140,248,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.5rem;margin-bottom:0.5rem;">🤝</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.4rem;">Multi-Agent Debate</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">Peer-review simulation that no single-prompt system can replicate — conflicts are resolved with documentation evidence</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;transition:all 0.3s;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(56,189,248,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.5rem;margin-bottom:0.5rem;">📖</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.4rem;">100% Cited Evidence</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">Every single code links to the specific clinical phrase that justifies it — not just a code, a legal defense</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;transition:all 0.3s;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(167,139,250,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.5rem;margin-bottom:0.5rem;">🏥</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.4rem;">Medical-Domain RAG</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">8 vector collections of official CMS codes, SNOMED CT, NCCI edits — not general-purpose knowledge</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;transition:all 0.3s;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(34,197,94,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.5rem;margin-bottom:0.5rem;">⚡</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.4rem;">Real-Time Speed</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">10–30s per note on GROQ infrastructure — fast enough for real-time hospital billing workflows</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;transition:all 0.3s;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(251,146,60,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.5rem;margin-bottom:0.5rem;">🔄</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.4rem;">Fault-Tolerant</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">SQLite checkpointing ensures no work is lost — pipelines resume from the exact failure point</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.1rem;transition:all 0.3s;" onmouseenter="this.style.transform='translateY(-4px)';this.style.borderColor='rgba(239,68,68,0.4)'" onmouseleave="this.style.transform='';this.style.borderColor='rgba(255,255,255,0.08)'">
+                <div style="font-size:1.5rem;margin-bottom:0.5rem;">🔒</div>
+                <div style="font-weight:700;color:#f0f4ff;font-size:0.9rem;margin-bottom:0.4rem;">No Cloud Lock-in</div>
+                <div style="font-size:0.78rem;color:#6b7eab;line-height:1.4;">Runs fully on-premise — critical for HIPAA compliance and hospital data sovereignty requirements</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 14 — THANK YOU / CALL TO ACTION
+═══════════════════════════════════════ -->
+<div class="slide slide-14" data-slide="14">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:550px;height:550px;top:-120px;right:-100px;background:#818cf8;opacity:0.15;"></div>
+        <div class="blob" style="width:400px;height:400px;bottom:-100px;left:-80px;background:#38bdf8;opacity:0.12;"></div>
+        <div class="blob" style="width:250px;height:250px;top:40%;left:20%;background:#a78bfa;opacity:0.1;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content text-center">
+        <div style="font-size:80px;margin-bottom:1rem;animation:float 3s ease-in-out infinite;" class="reveal">🏆</div>
+        <h1 class="font-display reveal" style="font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;background:linear-gradient(135deg,#818cf8,#38bdf8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:0.8rem;">CodePerfect</h1>
+        <p class="reveal" style="font-size:1.05rem;color:#c7d2fe;max-width:600px;margin:0 auto 1.6rem;line-height:1.6;">Eliminating the $68B medical coding fraud problem through agentic AI — one clinical note at a time.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;max-width:700px;margin:0 auto;" class="reveal">
+            <div style="background:rgba(129,140,248,0.1);border:1px solid rgba(129,140,248,0.25);border-radius:12px;padding:1rem;">
+                <div style="font-size:1.4rem;font-weight:900;color:#818cf8;font-family:'Inter',sans-serif;">85–92%</div>
+                <div style="font-size:0.72rem;color:#6b7eab;text-transform:uppercase;letter-spacing:1px;margin-top:0.2rem;">Coding Accuracy</div>
+            </div>
+            <div style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);border-radius:12px;padding:1rem;">
+                <div style="font-size:1.4rem;font-weight:900;color:#38bdf8;font-family:'Inter',sans-serif;">30x</div>
+                <div style="font-size:0.72rem;color:#6b7eab;text-transform:uppercase;letter-spacing:1px;margin-top:0.2rem;">Faster Than Manual</div>
+            </div>
+            <div style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);border-radius:12px;padding:1rem;">
+                <div style="font-size:1.4rem;font-weight:900;color:#a78bfa;font-family:'Inter',sans-serif;">$0</div>
+                <div style="font-size:0.72rem;color:#6b7eab;text-transform:uppercase;letter-spacing:1px;margin-top:0.2rem;">Compliance Violations</div>
+            </div>
+        </div>
+        <p class="reveal" style="font-size:0.82rem;color:#6b7eab;margin-top:1.5rem;letter-spacing:3px;text-transform:uppercase;">Virtusa Hackathon 2026 · Use Case 2 · Team CodePerfect</p>
+    </div>
+</div>
+
+</div><!-- end .deck -->
+
+<div class="nav-controls">
+    <button class="nav-btn" onclick="changeSlide(-1)">&#8249;</button>
+    <div class="slide-dots" id="dots"></div>
+    <button class="nav-btn" onclick="changeSlide(1)">&#8250;</button>
+    <span class="slide-counter" id="counter">1 / 14</span>
+</div>
+
+<script>
+    let current = 1;
+    const total = document.querySelectorAll('.slide').length;
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    for (let i = 1; i <= total; i++) { const dot = document.createElement('div'); dot.className = 'dot' + (i === 1 ? ' active' : ''); dot.onclick = () => goToSlide(i); dotsContainer.appendChild(dot); }
+    function goToSlide(n) {
+        const prev = document.querySelector('.slide.active');
+        const next = document.querySelector(`.slide[data-slide="${n}"]`);
+        if (prev) prev.classList.remove('active');
+        if (next) { next.classList.add('active'); animateSlide(next); }
+        current = n; updateNav();
+    }
+    function changeSlide(dir) { let n = current + dir; if (n < 1) n = total; if (n > total) n = 1; goToSlide(n); }
+    function updateNav() { document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i + 1 === current)); counter.textContent = current + ' / ' + total; }
+    document.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(1); } if (e.key === 'ArrowLeft') { e.preventDefault(); changeSlide(-1); } });
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
+    document.addEventListener('touchend', e => { const d = touchStartX - e.changedTouches[0].clientX; if (Math.abs(d) > 50) changeSlide(d > 0 ? 1 : -1); });
+
+    function animateSlide(slide) {
+        slide.querySelectorAll('.reveal').forEach((el, i) => {
+            el.style.transition = 'none'; el.style.opacity = '0'; el.style.transform = 'translateY(20px)';
+            el.offsetHeight;
+            const delay = i * 0.08;
+            el.style.transition = `opacity 0.35s ease ${delay}s, transform 0.35s ease ${delay}s`;
+            el.style.opacity = '1'; el.style.transform = 'translateY(0px)';
+        });
+        animateSlideEffects(slide);
+    }
+
+    function animateSlideEffects(slide) {
+        // Animated counters
+        slide.querySelectorAll('[data-count]:not(.counted)').forEach(el => {
+            el.classList.add('counted');
+            const target = parseInt(el.dataset.count);
+            let cur = 0; const step = Math.max(1, target / 40);
+            const timer = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(timer); } el.textContent = Math.round(cur); }, 30);
+        });
+        // stat-num jump animation
+        slide.querySelectorAll('.stat-num:not(.counted)').forEach(el => {
+            el.classList.add('counted');
+            const target = parseInt(el.dataset.target);
+            let cur = 0; const step = Math.max(1, target / 40);
+            const sfx = el.closest('[style*="ef4444"]') ? '%' : '%';
+            const timer = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(timer); } el.textContent = Math.round(cur); }, 30);
+        });
+        // Bar fills
+        slide.querySelectorAll('.bar-fill:not(.fill-init)').forEach((bar, i) => {
+            bar.classList.add('fill-init');
+            bar.style.width = '0%'; bar.style.transition = `width 0.6s ease ${i * 0.1}s`; bar.offsetHeight; bar.style.width = bar.dataset.width + '%';
+        });
+    }
+
+    document.addEventListener('mousemove', (e) => {
+        const s = document.querySelector('.mouse-spotlight');
+        if (s) s.style.background = `radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, rgba(129,140,248,0.06), transparent 40%)`;
+    });
+
+    (function() {
+        let mx = window.innerWidth/2, my = window.innerHeight/2;
+        const cx = window.innerWidth/2, cy = window.innerHeight/2;
+        document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+        (function tick() {
+            const ox = (mx-cx)/cx, oy = (my-cy)/cy;
+            document.querySelectorAll('.deco-shape').forEach(s => { const sp = parseFloat(s.dataset.speed)||0.03; s.style.transform = `translate(${ox*sp*100}px,${oy*sp*100}px)`; });
+            requestAnimationFrame(tick);
+        })();
+    })();
+
+    window.initParticles = function(canvas, options) {
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+        const interactive = options.interactive !== false;
+        const count = options.count || (interactive ? 55 : 18);
+        let mx = -1000, my = -1000;
+        const particles = Array.from({ length: count }, () => ({
+            x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+            vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3,
+            size: Math.random()*2.5+0.8, alpha: Math.random()*0.35+0.1
+        }));
+        if (interactive) { canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); mx = e.clientX-r.left; my = e.clientY-r.top; }); canvas.addEventListener('mouseleave', () => { mx=-1000; my=-1000; }); }
+        (function animate() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            particles.forEach(p => {
+                if (interactive) { const dx=p.x-mx,dy=p.y-my,dist=Math.sqrt(dx*dx+dy*dy); if (dist<120) { const f=(120-dist)/120*2; p.vx+=(dx/dist)*f*0.1; p.vy+=(dy/dist)*f*0.1; } }
+                p.vx*=0.98; p.vy*=0.98; p.x+=p.vx; p.y+=p.vy;
+                if (p.x<0) p.x=canvas.width; if (p.x>canvas.width) p.x=0;
+                if (p.y<0) p.y=canvas.height; if (p.y>canvas.height) p.y=0;
+                ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+                ctx.fillStyle=`rgba(129,140,248,${p.alpha})`; ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        })();
+    };
+    document.querySelectorAll('.particle-canvas').forEach(c => initParticles(c, {interactive:true,count:55}));
+    document.querySelectorAll('.particle-canvas-ambient').forEach(c => initParticles(c, {interactive:false,count:18}));
+
+    try { animateSlide(document.querySelector('.slide.active')); } catch(e) {}
+</script>
+</body>
+</html>'''
+
+with open('codeperfect_hackathon.slides.html', 'w', encoding='utf-8') as f:
+    f.write(html)
+print("HTML written:", len(html), "chars")
+
