@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Medical Coding Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0a0e1a;
+    --surface:  #111827;
+    --surface2: #1f2937;
+    --border:   #2d3748;
+    --text:     #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent:   #38bdf8;
+    --accent2:  #818cf8;
+    --green:    #4ade80;
+    --yellow:   #facc15;
+    --red:      #f87171;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-body);
+          font-size:14px; line-height:1.6; }
+
+  /* ── Layout ── */
+  .shell { display:flex; min-height:100vh; }
+  nav { width:240px; min-width:240px; background:var(--surface);
+         border-right:1px solid var(--border); padding:24px 0;
+         position:sticky; top:0; height:100vh; overflow-y:auto; }
+  nav h1 { font-family:var(--font-mono); font-size:12px; color:var(--accent);
+             letter-spacing:0.1em; text-transform:uppercase;
+             padding:0 20px 16px; border-bottom:1px solid var(--border); }
+  nav a { display:block; padding:8px 20px; color:var(--text-dim); text-decoration:none;
+            font-size:12px; transition:all 0.15s; border-left:2px solid transparent; }
+  nav a:hover, nav a.active { color:var(--accent); border-left-color:var(--accent);
+                                background:rgba(56,189,248,0.05); }
+  nav .nav-group { margin-top:16px; }
+  nav .nav-group-title { padding:8px 20px 4px; font-size:10px; text-transform:uppercase;
+                           letter-spacing:0.1em; color:var(--text-dim); }
+  main { flex:1; padding:32px 40px; max-width:1400px; }
+
+  /* ── Header ── */
+  .report-header { margin-bottom:32px; padding-bottom:24px;
+                    border-bottom:1px solid var(--border); }
+  .report-header h2 { font-size:22px; font-weight:600; color:var(--text);
+                        font-family:var(--font-mono); }
+  .report-meta { margin-top:8px; color:var(--text-dim); font-size:12px; }
+  .report-meta span { margin-right:24px; }
+
+  /* ── Sections ── */
+  section { margin-bottom:40px; scroll-margin-top:24px; }
+  section h3 { font-size:13px; font-weight:600; text-transform:uppercase;
+                letter-spacing:0.08em; color:var(--accent); margin-bottom:16px;
+                padding-bottom:8px; border-bottom:1px solid var(--border);
+                font-family:var(--font-mono); }
+  section h4 { font-size:12px; font-weight:500; color:var(--text-dim);
+                margin:16px 0 8px; text-transform:uppercase; letter-spacing:0.05em; }
+
+  /* ── Agent tabs ── */
+  .agent-tabs { display:flex; gap:0; margin-bottom:0; border-bottom:1px solid var(--border); }
+  .agent-tab { padding:10px 20px; font-size:12px; font-weight:500; cursor:pointer;
+                color:var(--text-dim); border-bottom:2px solid transparent;
+                transition:all 0.15s; user-select:none; }
+  .agent-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .agent-pane { display:none; padding-top:16px; }
+  .agent-pane.active { display:block; }
+
+  /* ── Tables ── */
+  .data-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:16px; }
+  .data-table th { background:var(--surface2); color:var(--text-dim); font-weight:500;
+                    text-align:left; padding:8px 12px; font-size:11px; letter-spacing:0.05em;
+                    text-transform:uppercase; border-bottom:1px solid var(--border); }
+  .data-table td { padding:8px 12px; border-bottom:1px solid var(--border);
+                    vertical-align:top; color:var(--text); }
+  .data-table tr:last-child td { border-bottom:none; }
+  .data-table tr:hover td { background:rgba(255,255,255,0.02); }
+  .debate-table { font-size:11px; }
+  .debate-table td { padding:6px 10px; }
+
+  /* ── Badges ── */
+  .badge { display:inline-block; padding:2px 8px; border-radius:4px;
+            font-size:11px; font-weight:500; white-space:nowrap; }
+
+  /* ── Score bars ── */
+  .scores-grid { display:flex; flex-direction:column; gap:10px;
+                  background:var(--surface2); padding:20px; border-radius:8px;
+                  border:1px solid var(--border); }
+  .match-rates { display:flex; flex-direction:column; gap:10px;
+                  background:var(--surface2); padding:20px; border-radius:8px;
+                  border:1px solid var(--border); margin-top:16px; }
+  .score-row { display:flex; align-items:center; gap:12px; }
+  .score-label { width:240px; min-width:240px; font-size:12px; color:var(--text-dim); }
+  .bar-track { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; transition:width 0.8s ease; }
+  .score-pct { width:52px; text-align:right; font-family:var(--font-mono);
+                font-size:12px; font-weight:600; }
+  .risk-label { display:inline-block; margin-top:16px; padding:6px 16px;
+                 border-radius:6px; font-weight:600; font-size:13px; }
+
+  /* ── Stat grid ── */
+  .stat-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:20px; }
+  .stat { background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+           padding:14px; text-align:center; font-size:11px; color:var(--text-dim); }
+  .stat span { display:block; font-size:22px; font-weight:700; font-family:var(--font-mono);
+                color:var(--text); margin-bottom:4px; }
+  .stat.good span { color:var(--green); }
+  .stat.warn span { color:var(--yellow); }
+  .stat.bad  span { color:var(--red); }
+
+  /* ── Scoreboard ── */
+  .scoreboard { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .score-card { background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+                 padding:16px; text-align:center; font-size:12px; color:var(--text-dim); }
+  .score-card span { display:block; font-size:28px; font-weight:700;
+                      font-family:var(--font-mono); color:var(--accent); }
+
+  /* ── Justification cards ── */
+  .justification-card { background:var(--surface2); border:1px solid var(--border);
+                          border-radius:8px; margin-bottom:12px; overflow:hidden; }
+  .just-header { display:flex; align-items:center; gap:10px; padding:12px 16px;
+                  background:rgba(255,255,255,0.03); border-bottom:1px solid var(--border); }
+  .just-code { font-family:var(--font-mono); font-weight:600; font-size:14px; color:var(--accent); }
+  .just-type { font-size:11px; color:var(--text-dim); background:var(--border);
+                padding:2px 8px; border-radius:4px; }
+  .just-body { padding:12px 16px; display:flex; flex-direction:column; gap:6px; }
+  .just-row { font-size:12px; color:var(--text); }
+  .just-row strong { color:var(--text-dim); margin-right:6px; }
+  .comparison-note { color:var(--accent2); font-size:11px; }
+
+  /* ── Note excerpt ── */
+  .note-excerpt { background:var(--surface2); border:1px solid var(--border);
+                   border-radius:8px; padding:16px; font-family:var(--font-mono);
+                   font-size:11px; color:var(--text-dim); white-space:pre-wrap;
+                   max-height:200px; overflow-y:auto; line-height:1.7; }
+
+  /* ── Compliance ── */
+  .compliance-status { display:inline-block; padding:8px 20px; border-radius:6px;
+                         font-weight:700; font-size:14px; margin-bottom:12px; }
+  .issue-list { margin-left:20px; color:var(--text-dim); font-size:13px; }
+  .issue-list li { margin-bottom:4px; }
+
+  /* ── Recommendations ── */
+  .rec-list { margin-left:20px; }
+  .rec-list li { margin-bottom:8px; font-size:13px; color:var(--text); }
+  .rec-list li::marker { color:var(--accent); }
+
+  /* ── Misc ── */
+  .notes-box { background:rgba(56,189,248,0.05); border:1px solid rgba(56,189,248,0.2);
+                border-radius:6px; padding:12px 16px; font-size:12px;
+                color:var(--text-dim); margin-top:12px; line-height:1.6; }
+  .empty { color:var(--text-dim); font-size:12px; font-style:italic; padding:8px 0; }
+  .audit-summary-text { font-size:13px; line-height:1.7; color:var(--text);
+                          background:var(--surface2); border:1px solid var(--border);
+                          border-radius:8px; padding:16px; }
+
+  /* ── Responsive ── */
+  @media(max-width:900px) {
+    .shell { flex-direction:column; }
+    nav { width:100%; height:auto; position:relative; }
+    .stat-grid { grid-template-columns:repeat(3,1fr); }
+    .scoreboard { grid-template-columns:repeat(2,1fr); }
+    .score-label { width:160px; min-width:160px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── Sidebar nav ──────────────────────────────────────────────────── -->
+<nav>
+  <h1>🏥 MedCode AI</h1>
+  <div class="nav-group">
+    <div class="nav-group-title">Report</div>
+    <a href="#note">Clinical Note</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Agent Outputs</div>
+    <a href="#agents">Clinical vs Revenue</a>
+    <a href="#debate">Debate Resolution</a>
+    <a href="#final">Final Codes</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Review</div>
+    <a href="#human">Human Coder Codes</a>
+    <a href="#comparison">AI vs Human</a>
+    <a href="#compliance">Compliance</a>
+    <a href="#audit">Audit Findings</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">Analysis</div>
+    <a href="#justifications">Justifications</a>
+    <a href="#scores">Confidence Scores</a>
+    <a href="#recommendations">Recommendations</a>
+    <a href="#summary">Audit Summary</a>
+  </div>
+</nav>
+
+<!-- ── Main content ─────────────────────────────────────────────────── -->
+<main>
+
+  <div class="report-header">
+    <h2>Medical Coding AI — Compliance Report</h2>
+    <div class="report-meta">
+      <span>Generated: March 26, 2026  09:33</span>
+      <span>LLM: Llama 4 Scout via Groq</span>
+      <span>Framework: LangGraph + ChromaDB</span>
+    </div>
+  </div>
+
+  <section id="note">
+    <h3>Clinical Note Excerpt</h3>
+    <div class="note-excerpt">Here is the cleaned and normalised clinical note:
+
+DISCHARGE SUMMARY
+
+Patient: John Doe | Date of Birth: 1958-03-15 | Medical Record Number: 123456
+Admission Date: 2024-01-10 | Discharge Date: 2024-01-14
+Attending Physician: Dr. Sarah Johnson, MD
+
+PRINCIPAL DIAGNOSIS:
+Type 2 Diabetes Mellitus with diabetic nephropathy, stage 3 chronic kidney disease.
+
+SECONDARY DIAGNOSES:
+1. Essential Hypertension, poorly controlled
+2. Hyperlipidemia
+3. Obstructive Sleep Apnea – on home CPAP therapy
+4. Obesity, Body Mass Index 34.2
+
+HISTORY OF PRESENT ILLNESS:
+A 62-year-old male with a long-standing history of Diabetes Mellitus Type 2 (diagnosed in 2008), Hypertension, and chronic kidney disease stage 3 presented to the Emergency Department with a 3-day history of worsening pedal edema, fatigue, and increased urinary frequency. 
+His HbA1c on admission was 9.8%, indicating poor glycemic control. Serum creatinine was 2.1 mg/dL (baseline 1.8). 
+Blood Urea Nitrogen was 38 mg/dL. Estimated Glomerular Filtration Rate was 28 mL/min/1.73m2.
+
+PHYSICAL EXAMINATION:
+Blood pressure was 168/94 mmHg, heart rate was 88 beats per minute, respiratory rate was 16, temperature was 98.6°F, and SpO2 was 96% on room air. 
+There was 2+ pitting edema in bilateral lower extremities. 
+The patient was not in acute distress.
+
+DIAGNOSTIC WORKUP:
+- Complete Blood Count: White Blood Cell count 8.2, Hemoglobin 11.4, Platelet count 210 (mild anemia noted)
+- Comprehensive Metabolic Panel: Sodium 138, Potassium 4.8, Bicarbonat
+
+[Note truncated — full text processed by pipeline]</div>
+  </section>
+
+  <section id="agents">
+    <h3>Agent Independent Coding</h3>
+    <div class="agent-tabs">
+      <div class="agent-tab active" onclick="switchTab(this,'clinical-pane')">🏥 Clinical Accuracy Agent</div>
+      <div class="agent-tab" onclick="switchTab(this,'revenue-pane')">💰 Revenue Optimization Agent</div>
+    </div>
+    <div id="clinical-pane" class="agent-pane active"><h4>ICD-10 Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Conf</th><th>Rationale</th></tr></thead><tbody><tr><td>E11.22</td><td>Type 2 diabetes mellitus with diabetic nephropathy</td><td>principal</td><td>100%</td><td>The patient has a long-standing history of Type 2 Diabetes Mellitus with diabeti</td></tr><tr><td>I10</td><td>Essential (primary) hypertension</td><td>secondary</td><td>100%</td><td>The patient has essential hypertension, poorly controlled.</td></tr><tr><td>E7841</td><td>Hyperlipidemia</td><td>secondary</td><td>100%</td><td>The patient has hyperlipidemia.</td></tr><tr><td>G4733</td><td>Obstructive sleep apnea (adult) (pediatric)</td><td>secondary</td><td>100%</td><td>The patient has obstructive sleep apnea and is on home CPAP therapy.</td></tr><tr><td>E669</td><td>Obesity, unspecified</td><td>secondary</td><td>100%</td><td>The patient&#x27;s BMI is 34.2, indicating obesity.</td></tr></tbody></table><h4>CPT Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Conf</th><th>Rationale</th></tr></thead><tbody><tr><td>99284</td><td>Emergency department visit for the evaluation and management of a patient</td><td>1</td><td>100%</td><td>The patient was admitted through the Emergency Department.</td></tr><tr><td>12002</td><td>Routine venipuncture for lab draws</td><td>3</td><td>100%</td><td>Routine venipuncture for lab draws was performed three times over the hospital s</td></tr><tr><td>93000</td><td>Electrocardiogram, routine ECG with at least 12 leads</td><td>1</td><td>100%</td><td>A 12-lead electrocardiogram was performed.</td></tr><tr><td>76770</td><td>Ultrasound, abdominal, real time with image documentation</td><td>1</td><td>100%</td><td>A renal ultrasound was performed.</td></tr><tr><td>71020</td><td>Radiologic examination, chest; 2 views</td><td>1</td><td>100%</td><td>A chest X-ray with 2 views was performed.</td></tr></tbody></table><div class="notes-box"><strong>Agent Notes:</strong> The principal diagnosis is Type 2 diabetes mellitus with diabetic nephropathy. The CPT codes include emergency department visit, routine venipuncture, electrocardiogram, renal ultrasound, and chest X-ray.</div></div>
+    <div id="revenue-pane"  class="agent-pane"></div>
+  </section>
+
+  <section id="debate">
+    <h3>⚖️ Debate Agent — Conflict Resolution</h3>
+    
+        <div class="scoreboard">
+          <div class="score-card">🤝 Agreed<br><span>0</span></div>
+          <div class="score-card" title="Codes where agents disagreed">⚖️ Conflicts<br><span>10</span></div>
+          <div class="score-card">🏥 Clinical Won<br><span>10</span></div>
+          <div class="score-card">💰 Revenue Won<br><span>0</span></div>
+          
+        </div><table class="data-table debate-table"><thead><tr><th>Code</th><th>Type</th><th>Conflict</th><th>Clinical Said</th><th>Revenue Said</th><th>Winner</th><th>Resolution</th><th>Reasoning</th></tr></thead><tbody><tr><td>E11.22</td><td>ICD-10</td><td>one_sided</td><td>Type 2 diabetes mellitus with diabetic nephropathy</td><td>None</td><td><span class="badge" style="color:#0e7490;background:#cffafe">🏥 Clinical</span></td><td>Clinical agent&#x27;s code is supported by the note, no revenue challenge.</td><td>Principal diagnosis documented in the note.</td></tr><tr><td>I10</td><td>ICD-10</td><td>one_sided</td><td>Essential (primary) hypertension</td><td>None</td><td><span class="badge" style="color:#0e7490;background:#cffafe">🏥 Clinical</span></td><td>Clinical agent&#x27;s code is supported by the note, no revenue challenge.</td><td>Secondary diagnosis documented in the note.</td></tr><tr><td>E7841</td><td>ICD-10</td><td>one_sided</td><td>Hyperlipidemia</td><td>None</td><td><span class="badge" style="color:#0e7490;background:#cffafe">🏥 Clinical</span></td><td>Clinical agent&#x27;s code is supported by the note, no revenue challenge.</td><td>Secondary diagnosis documented in the note.</td></tr><tr><td>G4733</td><td>ICD-10</td><td>one_sided</td><td>Obstructive sleep apnea (adult) (pediatric)</td><td>None</td><td><span class="badge" style="color:#0e7490;background:#cffafe">🏥 Clinical</span></td><td>Clinical agent&#x27;s code is supported by the note, no revenue challenge.</td><td>Secondary diagnosis documented in the note.</td></tr><tr><td>E66.01</td><td>ICD-10</td><td>one_sided</td><td>Obesity, unspecified</td><td>None</td><td><span class="badge" style="color:#0e7490;background:#cffafe">🏥 Clinical</span></td><td>Clinical agent&#x27;s code is supported by the note, no revenue challenge. However, m</td><td>More specific code should be used based on BMI 34.2.</td></tr><tr><td>99284</td><td>CPT</td><td>one_sided</td><td>Emergency department visit for the evaluation and management of a pati</td><td>None</td><td><span class="badge" style="color:#0e7490;background:#cffafe">🏥 Clinical</span></td><td>Clinical agent&#x27;s code is supported by the note, no revenue challenge.</td><td>CPT code for emergency department visit.</td></tr><tr><td>12002</td><td>CPT</td><td>one_sided</td><td>Routine venipuncture for lab draws</td><td>None</td><td><span class="badge" style="color:#0e7490;background:#cffafe">🏥 Clinical</span></td><td>Clinical agent&#x27;s code is supported by the note, no revenue challenge. However, u</td><td>Multiple lab draws performed.</td></tr><tr><td>93000</td><td>CPT</td><td>one_sided</td><td>Electrocardiogram, routine ECG with at least 12 leads</td><td>None</td><td><span class="badge" style="color:#0e7490;background:#cffafe">🏥 Clinical</span></td><td>Clinical agent&#x27;s code is supported by the note, no revenue challenge.</td><td>ECG performed.</td></tr><tr><td>76770</td><td>CPT</td><td>one_sided</td><td>Ultrasound, abdominal, real time with image documentation</td><td>None</td><td><span class="badge" style="color:#0e7490;background:#cffafe">🏥 Clinical</span></td><td>Clinical agent&#x27;s code is supported by the note, no revenue challenge.</td><td>Renal ultrasound performed.</td></tr><tr><td>71020</td><td>CPT</td><td>one_sided</td><td>Radiologic examination, chest; 2 views</td><td>None</td><td><span class="badge" style="color:#0e7490;background:#cffafe">🏥 Clinical</span></td><td>Clinical agent&#x27;s code is supported by the note, no revenue challenge.</td><td>Chest X-ray performed.</td></tr></tbody></table><div class="notes-box"><strong>Debate Summary:</strong> Clinical agent&#x27;s codes were supported by the note, no revenue challenges were made.</div>
+  </section>
+
+  <section id="final">
+    <h3>📋 Final Resolved Codes (Post-Debate)</h3>
+    <h4>ICD-10-CM Diagnosis Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th></tr></thead><tbody><tr><td>E11.22</td><td>Type 2 diabetes mellitus with diabetic nephropathy</td><td>principal</td><td>1.0</td></tr><tr><td>I10</td><td>Essential (primary) hypertension</td><td>secondary</td><td>1.0</td></tr><tr><td>E7841</td><td>Hyperlipidemia</td><td>secondary</td><td>1.0</td></tr><tr><td>G4733</td><td>Obstructive sleep apnea (adult) (pediatric)</td><td>secondary</td><td>1.0</td></tr><tr><td>E66.01</td><td>Obesity, unspecified</td><td>secondary</td><td>1.0</td></tr></tbody></table>
+    <h4>CPT Procedure Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Confidence</th></tr></thead><tbody><tr><td>99284</td><td>Emergency department visit for the evaluation and management of a patient</td><td>1</td><td>1.0</td></tr><tr><td>12002</td><td>Routine venipuncture for lab draws</td><td>3</td><td>1.0</td></tr><tr><td>93000</td><td>Electrocardiogram, routine ECG with at least 12 leads</td><td>1</td><td>1.0</td></tr><tr><td>76770</td><td>Ultrasound, abdominal, real time with image documentation</td><td>1</td><td>1.0</td></tr><tr><td>71020</td><td>Radiologic examination, chest; 2 views</td><td>1</td><td>1.0</td></tr></tbody></table>
+    <h4>HCPCS Level II Codes</h4><p class='empty'>None assigned.</p>
+  </section>
+
+  <section id="human">
+    <h3>Human Coder Codes</h3>
+    <h4>Codes entered by Jane Smith, CPC</h4><table class="data-table "><thead><tr><th>Code</th><th>Description</th><th>Type</th></tr></thead><tbody><tr><td>E11.65</td><td>Type 2 DM with hyperglycemia</td><td>ICD-10</td></tr><tr><td>N18.3</td><td>Chronic kidney disease stage 3</td><td>ICD-10</td></tr><tr><td>I10</td><td>Essential hypertension</td><td>ICD-10</td></tr><tr><td>E78.5</td><td>Hyperlipidemia</td><td>ICD-10</td></tr><tr><td>99232</td><td>Subsequent hospital care</td><td>CPT</td></tr><tr><td>93000</td><td>ECG routine</td><td>CPT</td></tr><tr><td>71046</td><td>Chest X-ray 2 views</td><td>CPT</td></tr><tr><td>85027</td><td>CBC automated</td><td>CPT</td></tr><tr><td>36415</td><td>Venipuncture</td><td>CPT</td></tr><tr><td>J1817</td><td>Insulin 50 units</td><td>HCPCS</td></tr></tbody></table>
+  </section>
+
+  <section id="comparison">
+    <h3>AI vs Human Comparison</h3>
+    
+        <div class="stat-grid">
+          <div class="stat"><span>10</span>AI Codes</div>
+          <div class="stat"><span>10</span>Human Codes</div>
+          <div class="stat good"><span>2</span>Exact Matches</div>
+          <div class="stat warn"><span>8</span>AI Only</div>
+          <div class="stat bad"><span>8</span>Human Only</div>
+          <div class="stat warn"><span>0</span>Unit Mismatches</div>
+        </div>
+        <div class="match-rates">
+          
+    <div class="score-row">
+      <span class="score-label">ICD-10 Match Rate</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:12.5%;background:#ef4444"></div>
+      </div>
+      <span class="score-pct" style="color:#ef4444">12.5%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">CPT Match Rate</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:11.1%;background:#ef4444"></div>
+      </div>
+      <span class="score-pct" style="color:#ef4444">11.1%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">HCPCS Match Rate</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:0.0%;background:#ef4444"></div>
+      </div>
+      <span class="score-pct" style="color:#ef4444">0.0%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">Overall Match Rate</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:11.1%;background:#ef4444"></div>
+      </div>
+      <span class="score-pct" style="color:#ef4444">11.1%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">AI Accuracy vs Human</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:20.0%;background:#ef4444"></div>
+      </div>
+      <span class="score-pct" style="color:#ef4444">20.0%</span>
+    </div>
+        </div><h4>✅ Agreed Codes</h4><table class="data-table "><thead><tr><th>Code</th><th>Type</th><th>Description</th><th>AI Conf</th></tr></thead><tbody><tr><td>I10</td><td>ICD-10</td><td>Essential (primary) hypertension</td><td>100%</td></tr><tr><td>93000</td><td>CPT</td><td>Electrocardiogram, routine ECG with at least 12 leads</td><td>100%</td></tr></tbody></table><h4>⚠️ Discrepancies</h4><table class="data-table "><thead><tr><th>Type</th><th>Code</th><th>CodeType</th><th>AI Code</th><th>Human Code</th><th>Severity</th><th>Impact</th></tr></thead><tbody><tr><td>AI Only</td><td>E11.22</td><td>ICD-10</td><td>E11.22</td><td>—</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>AI coded E11.22 — human did not. Verify documentation.</td></tr><tr><td>Human Only</td><td>E11.65</td><td>ICD-10</td><td>—</td><td>E11.65</td><td><span class="badge" style="color:#7f1d1d;background:#fecaca">HIGH</span></td><td>Human coded E11.65 — AI missed it. Review documentation.</td></tr><tr><td>AI Only</td><td>E66.01</td><td>ICD-10</td><td>E66.01</td><td>—</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>AI coded E66.01 — human did not. Verify documentation.</td></tr><tr><td>Human Only</td><td>E78.5</td><td>ICD-10</td><td>—</td><td>E78.5</td><td><span class="badge" style="color:#7f1d1d;background:#fecaca">HIGH</span></td><td>Human coded E78.5 — AI missed it. Review documentation.</td></tr><tr><td>AI Only</td><td>E7841</td><td>ICD-10</td><td>E7841</td><td>—</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>AI coded E7841 — human did not. Verify documentation.</td></tr><tr><td>AI Only</td><td>G4733</td><td>ICD-10</td><td>G4733</td><td>—</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>AI coded G4733 — human did not. Verify documentation.</td></tr><tr><td>Human Only</td><td>N18.3</td><td>ICD-10</td><td>—</td><td>N18.3</td><td><span class="badge" style="color:#7f1d1d;background:#fecaca">HIGH</span></td><td>Human coded N18.3 — AI missed it. Review documentation.</td></tr><tr><td>AI Only</td><td>12002</td><td>CPT</td><td>12002</td><td>—</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>AI coded 12002 — human did not. Verify documentation.</td></tr><tr><td>Human Only</td><td>36415</td><td>CPT</td><td>—</td><td>36415</td><td><span class="badge" style="color:#7f1d1d;background:#fecaca">HIGH</span></td><td>Human coded 36415 — AI missed it. Review documentation.</td></tr><tr><td>AI Only</td><td>71020</td><td>CPT</td><td>71020</td><td>—</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>AI coded 71020 — human did not. Verify documentation.</td></tr><tr><td>Human Only</td><td>71046</td><td>CPT</td><td>—</td><td>71046</td><td><span class="badge" style="color:#7f1d1d;background:#fecaca">HIGH</span></td><td>Human coded 71046 — AI missed it. Review documentation.</td></tr><tr><td>AI Only</td><td>76770</td><td>CPT</td><td>76770</td><td>—</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>AI coded 76770 — human did not. Verify documentation.</td></tr><tr><td>Human Only</td><td>85027</td><td>CPT</td><td>—</td><td>85027</td><td><span class="badge" style="color:#7f1d1d;background:#fecaca">HIGH</span></td><td>Human coded 85027 — AI missed it. Review documentation.</td></tr><tr><td>Human Only</td><td>99232</td><td>CPT</td><td>—</td><td>99232</td><td><span class="badge" style="color:#7f1d1d;background:#fecaca">HIGH</span></td><td>Human coded 99232 — AI missed it. Review documentation.</td></tr><tr><td>AI Only</td><td>99284</td><td>CPT</td><td>99284</td><td>—</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>AI coded 99284 — human did not. Verify documentation.</td></tr><tr><td>Human Only</td><td>J1817</td><td>HCPCS</td><td>—</td><td>J1817</td><td><span class="badge" style="color:#7f1d1d;background:#fecaca">HIGH</span></td><td>Human coded J1817 — AI missed it. Review documentation.</td></tr></tbody></table>
+  </section>
+
+  <section id="compliance">
+    <h3>Compliance Validation (NCCI · MUE · LCD · NCD)</h3>
+    <div class="compliance-status" style="color:#166534;background:#dcfce7">✅ COMPLIANT</div>
+  </section>
+
+  <section id="audit">
+    <h3>Audit Findings</h3>
+    <table class="data-table "><thead><tr><th>Type</th><th>Code</th><th>Description</th><th>Severity</th><th>Action Required</th></tr></thead><tbody><tr><td><span style="color:#facc15;font-weight:700">── AI AUDIT FINDINGS</span></td><td></td><td></td><td></td><td></td></tr><tr><td>downcoding</td><td>E11.22</td><td>The patient&#x27;s HbA1c on admission was 9.8%, indicating poor glycemic control, and serum creatinine was 2.1 mg/dL (baseline 1.8), suggesting a more complex condition. Consider coding to E11.22 with additional character for chronic kidney disease stage 3.</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>Review and revise code to accurately reflect patient&#x27;s condition</td></tr><tr><td>missing</td><td>none</td><td>The patient&#x27;s estimated Glomerular Filtration Rate (eGFR) was 28 mL/min/1.73m2, which could be coded as a specific CKD code, N18.3.</td><td><span class="badge" style="color:#14532d;background:#bbf7d0">LOW</span></td><td>Add code N18.3 for stage 3 chronic kidney disease</td></tr><tr><td>incorrect</td><td>E66.01</td><td>The patient&#x27;s BMI is documented as 34.2, which corresponds to E66.1, not E66.01.</td><td><span class="badge" style="color:#14532d;background:#bbf7d0">LOW</span></td><td>Update code to E66.1 for accuracy</td></tr><tr><td>high_risk</td><td>99284</td><td>The ED visit code seems appropriate; however, documentation does not specifically support high-complexity MDM or high-level history and exam. Monitor for potential OIG/RAC scrutiny.</td><td><span class="badge" style="color:#78350f;background:#fde68a">MEDIUM</span></td><td>Verify ED visit code supports medical necessity and MDM</td></tr></tbody></table>
+  </section>
+
+  <section id="justifications">
+    <h3>Code Justifications with AI vs Human Verdict</h3>
+    
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">E11.22</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#166534;background:#dcfce7">✅ AI Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Type 2 Diabetes Mellitus with diabetic nephropathy, stage 3 chronic kidney disease</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 4</div>
+            <div class="just-row"><strong>Explanation:</strong> The AI coded E11.22, which is Type 2 diabetes mellitus with diabetic nephropathy. The documentation supports this code as it mentions &#x27;Type 2 Diabetes Mellitus with diabetic nephropathy, stage 3 chronic kidney disease.&#x27; However, the human coder did not code this, but instead coded E11.65.</div>
+            <div class='just-row'><strong>Human Code:</strong> E11.65</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The AI&#x27;s code E11.22 directly matches the clinical documentation provided. The human coder&#x27;s choice of E11.65 does not align as closely with the specific mention of diabetic nephropathy.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">E11.65</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#854d0e;background:#fef9c3">⚠️ Human Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Type 2 Diabetes Mellitus with diabetic nephropathy, stage 3 chronic kidney disease</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 4</div>
+            <div class="just-row"><strong>Explanation:</strong> The human coder assigned E11.65, which is Type 2 diabetes mellitus with diabetic nephropathy and kidney complications. While the clinical note does mention diabetic nephropathy and stage 3 chronic kidney disease, E11.65 seems to capture the kidney involvement more broadly.</div>
+            <div class='just-row'><strong>Human Code:</strong> E11.65</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The human coder&#x27;s choice of E11.65 captures the broader impact on the kidneys (stage 3 chronic kidney disease), which seems to align well with the clinical presentation.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">N18.3</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#854d0e;background:#fef9c3">⚠️ Human Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> stage 3 chronic kidney disease</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 4</div>
+            <div class="just-row"><strong>Explanation:</strong> The human coder assigned N18.3, which is Chronic kidney disease, stage 3. This directly corresponds with the &#x27;stage 3 chronic kidney disease&#x27; mentioned in the clinical note.</div>
+            <div class='just-row'><strong>Human Code:</strong> N18.3</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The human coder accurately captured the chronic kidney disease stage 3 with N18.3, which was not coded by the AI.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">I10</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#1e3a5f;background:#dbeafe">🤝 Both Valid</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Essential Hypertension, poorly controlled</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 4</div>
+            <div class="just-row"><strong>Explanation:</strong> Both the AI and human coder assigned I10, which is Essential (primary) hypertension. The clinical note supports this with &#x27;Essential Hypertension, poorly controlled.&#x27;</div>
+            <div class='just-row'><strong>Human Code:</strong> I10</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> Both coders correctly identified essential hypertension as I10, aligning with clinical documentation.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">E78.5</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#854d0e;background:#fef9c3">⚠️ Human Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Hyperlipidemia</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 4</div>
+            <div class="just-row"><strong>Explanation:</strong> The human coder assigned E78.5, which is Hyperlipidemia. The clinical note mentions &#x27;Hyperlipidemia,&#x27; supporting this code.</div>
+            <div class='just-row'><strong>Human Code:</strong> E78.5</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The human coder correctly identified hyperlipidemia with E78.5, which was missed by the AI.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">E7841</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#854d0e;background:#fef9c3">⚠️ Human Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Hyperlipidemia</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 4</div>
+            <div class="just-row"><strong>Explanation:</strong> The AI coded E7841, which is Other hyperlipidemia. However, E78.5 seems more appropriate based on standard coding for hyperlipidemia.</div>
+            <div class='just-row'><strong>Human Code:</strong> E78.5</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> E78.5 is a more direct and commonly used code for hyperlipidemia, making the human coder&#x27;s choice correct.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">E66.01</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#166534;background:#dcfce7">✅ AI Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Obesity, Body Mass Index 34.2</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 4</div>
+            <div class="just-row"><strong>Explanation:</strong> The AI assigned E66.01, which is Obesity, morbid. The clinical note mentions &#x27;Obesity, Body Mass Index 34.2,&#x27; which supports obesity but not specifically morbid obesity.</div>
+            <div class='just-row'><strong>Human Code:</strong> null</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> While BMI 34.2 indicates class I obesity, the AI&#x27;s choice of E66.01 might be considered in the context of obesity being a factor, though not precisely &#x27;morbid&#x27; without further specification.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">G4733</span>
+            <span class="just-type">ICD-10</span>
+            <span class="badge" style="color:#166534;background:#dcfce7">✅ AI Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Obstructive Sleep Apnea – on home CPAP therapy</div>
+            <div class="just-row"><strong>Guideline:</strong> ICD-10-CM Guidelines Chapter 4</div>
+            <div class="just-row"><strong>Explanation:</strong> The AI coded G4733, which is Obstructive sleep apnea (adult). The clinical note supports this with &#x27;Obstructive Sleep Apnea – on home CPAP therapy.&#x27;</div>
+            <div class='just-row'><strong>Human Code:</strong> null</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The AI correctly coded obstructive sleep apnea as G4733, aligning with the clinical note.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">99284</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#854d0e;background:#fef9c3">⚠️ Human Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Emergency Department visit</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The AI assigned 99284, which is Emergency department visit for the evaluation and management of a patient, which requires a comprehensive examination; medical decision making of high complexity. The clinical note supports an ED visit.</div>
+            <div class='just-row'><strong>Human Code:</strong> 99232</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The human coder chose 99232, which is Subsequent hospital inpatient or observation care, supporting the inpatient setting mentioned.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">99232</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#854d0e;background:#fef9c3">⚠️ Human Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Subsequent hospital care</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The human coder assigned 99232, which aligns with subsequent hospital care provided during the inpatient stay.</div>
+            <div class='just-row'><strong>Human Code:</strong> 99232</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The human coder accurately reflected the inpatient setting with 99232.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">12002</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#374151;background:#f3f4f6">➖ No Comparison</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Simple repair of superficial wounds</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The AI coded 12002, which is Simple repair of superficial wounds. However, there&#x27;s no clear evidence in the note to support this procedure.</div>
+            <div class='just-row'><strong>Human Code:</strong> null</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The AI coded 12002 without clear support from the clinical note.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">93000</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#1e3a5f;background:#dbeafe">🤝 Both Valid</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Electrocardiogram</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> Both AI and human coder assigned 93000, which is Electrocardiogram, routine ECG with at least 12 leads; interpretation and report. The clinical note mentions an electrocardiogram was performed.</div>
+            <div class='just-row'><strong>Human Code:</strong> 93000</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> Both coders correctly identified the electrocardiogram procedure.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">76770</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#166534;background:#dcfce7">✅ AI Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Renal ultrasound</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The AI assigned 76770, which is Ultrasound, abdominal, real time with image documentation; limited. The clinical note mentions a renal ultrasound.</div>
+            <div class='just-row'><strong>Human Code:</strong> null</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The AI coded 76770 for the renal ultrasound, which aligns with the clinical note.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">71020</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#854d0e;background:#fef9c3">⚠️ Human Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Chest X-ray</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The AI coded 71020, which is Radiologic examination, chest; 2 views, frontal and lateral. The clinical note mentions a chest X-ray 2 views.</div>
+            <div class='just-row'><strong>Human Code:</strong> 71046</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The human coder chose 71046, which might better align with specific details or additional views not clearly defined.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">71046</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#854d0e;background:#fef9c3">⚠️ Human Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Chest X-ray, 2 views</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The human coder assigned 71046, which could align with a chest X-ray examination.</div>
+            <div class='just-row'><strong>Human Code:</strong> 71046</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The human coder accurately reflected the chest X-ray procedure.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">85027</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#854d0e;background:#fef9c3">⚠️ Human Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Complete Blood Count</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The human coder assigned 85027, which is Blood count; complete (CBC), automated. The clinical note mentions a Complete Blood Count.</div>
+            <div class='just-row'><strong>Human Code:</strong> 85027</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The human coder accurately coded the complete blood count.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">36415</span>
+            <span class="just-type">CPT</span>
+            <span class="badge" style="color:#854d0e;background:#fef9c3">⚠️ Human Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Venipuncture</div>
+            <div class="just-row"><strong>Guideline:</strong> AMA CPT 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The human coder assigned 36415, which is Venipuncture for collection of specimen(s). This is a common procedure for blood draws.</div>
+            <div class='just-row'><strong>Human Code:</strong> 36415</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The human coder correctly coded venipuncture for blood collection.</div>
+          </div>
+        </div>
+        <div class="justification-card">
+          <div class="just-header">
+            <span class="just-code">J1817</span>
+            <span class="just-type">HCPCS</span>
+            <span class="badge" style="color:#854d0e;background:#fef9c3">⚠️ Human Correct</span>
+          </div>
+          <div class="just-body">
+            <div class="just-row"><strong>Evidence:</strong> Insulin</div>
+            <div class="just-row"><strong>Guideline:</strong> HCPCS 2024</div>
+            <div class="just-row"><strong>Explanation:</strong> The human coder assigned J1817, which is Insulin for administration. The clinical note supports insulin use.</div>
+            <div class='just-row'><strong>Human Code:</strong> J1817</div>
+            <div class='just-row comparison-note'><strong>Comparison:</strong> The human coder accurately coded insulin administration.</div>
+          </div>
+        </div>
+  </section>
+
+  <section id="scores">
+    <h3>Confidence & Risk Scores</h3>
+    
+        <div class="scores-grid">
+          
+    <div class="score-row">
+      <span class="score-label">Overall Coding Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:76.3%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">76.3%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">ICD-10 Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:76.0%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">76.0%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">CPT Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:76.0%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">76.0%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">HCPCS Confidence</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:77.6%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">77.6%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">Compliance Risk Score</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:31.0%;background:#22c55e"></div>
+      </div>
+      <span class="score-pct" style="color:#22c55e">31.0%</span>
+    </div>
+          
+    <div class="score-row">
+      <span class="score-label">AI vs Human Match Rate</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:11.1%;background:#ef4444"></div>
+      </div>
+      <span class="score-pct" style="color:#ef4444">11.1%</span>
+    </div>
+    <div class="score-row">
+      <span class="score-label">AI Accuracy vs Human</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:20.0%;background:#ef4444"></div>
+      </div>
+      <span class="score-pct" style="color:#ef4444">20.0%</span>
+    </div>
+          
+        </div>
+        <div class="risk-label" style="color:#166534;background:#dcfce7">
+          Risk Level: LOW
+        </div>
+  </section>
+
+  <section id="recommendations">
+    <h3>Recommendations</h3>
+    <ul class='rec-list'><li>AI coded E11.22 (ICD-10) — human missed, review for overcoding.</li><li>Human coded E11.65 (ICD-10) — AI missed, verify documentation.</li><li>AI coded E66.01 (ICD-10) — human missed, review for overcoding.</li><li>Human coded E78.5 (ICD-10) — AI missed, verify documentation.</li><li>AI coded E7841 (ICD-10) — human missed, review for overcoding.</li><li>AI coded G4733 (ICD-10) — human missed, review for overcoding.</li><li>Human coded N18.3 (ICD-10) — AI missed, verify documentation.</li><li>AI coded 12002 (CPT) — human missed, review for overcoding.</li><li>Human coded 36415 (CPT) — AI missed, verify documentation.</li><li>AI coded 71020 (CPT) — human missed, review for overcoding.</li><li>Human coded 71046 (CPT) — AI missed, verify documentation.</li><li>AI coded 76770 (CPT) — human missed, review for overcoding.</li><li>Human coded 85027 (CPT) — AI missed, verify documentation.</li><li>Human coded 99232 (CPT) — AI missed, verify documentation.</li><li>AI coded 99284 (CPT) — human missed, review for overcoding.</li><li>Human coded J1817 (HCPCS) — AI missed, verify documentation.</li></ul>
+  </section>
+
+  <section id="summary">
+    <h3>Audit Summary</h3>
+    <div class="audit-summary-text">Clinical agent&#x27;s codes were supported by the note, no revenue challenges were made.
+
+Automated audit completed. Review all high-severity findings before submission.</div>
+  </section>
+
+</main>
+</div>
+
+<script>
+function switchTab(tab, paneId) {
+  document.querySelectorAll('.agent-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.agent-pane').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+}
+
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks  = document.querySelectorAll('nav a');
+const observer  = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const active = document.querySelector('nav a[href="#' + e.target.id + '"]');
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-40% 0px -55% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

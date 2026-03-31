@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Coding AI — Final Compliance Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #f9fafb;
+            padding: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+            .container {
+                max-width: 100%;
+                box-shadow: none;
+                margin: 0;
+                padding: 20px;
+                background: white;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            table {
+                page-break-inside: avoid;
+                margin: 10px 0 !important;
+            }
+            .section-header {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+            .section-title {
+                page-break-after: avoid;
+            }
+            tr {
+                page-break-inside: avoid;
+            }
+            .meta-info, .clinical-note, .panel, .debate-scoreboard, 
+            .compliance-status, .recommendations, .audit-summary, .justifications {
+                page-break-inside: avoid;
+            }
+            .score-bar .score-fill {
+                border: 1px solid #333;
+            }
+            .violation-row {
+                background: #f5f5f5 !important;
+            }
+            thead {
+                display: table-header-group;
+            }
+            tfoot {
+                display: table-footer-group;
+            }
+        }
+        
+        .header {
+            border-bottom: 3px solid #0891b2;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #0891b2;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .meta-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 6px;
+        }
+        
+        .meta-item {
+            font-size: 14px;
+        }
+        
+        .meta-item strong {
+            color: #374151;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .meta-item span {
+            color: #6b7280;
+        }
+        
+        .section-header {
+            color: #1f2937;
+            font-size: 22px;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .section-title {
+            color: #374151;
+            font-size: 18px;
+            margin: 20px 0 15px 0;
+            font-weight: 600;
+        }
+        
+        .section-title.warning {
+            color: #dc2626;
+        }
+        
+        .clinical-note {
+            background: #eff6ff;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #1e3a8a;
+        }
+        
+        .warning {
+            color: #d97706;
+            padding: 10px;
+            background: #fef3c7;
+            border-left: 3px solid #f59e0b;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .info {
+            color: #0369a1;
+            padding: 10px;
+            background: #e0f2fe;
+            border-left: 3px solid #0284c7;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .panel {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        .panel strong {
+            color: #374151;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+        
+        table.codes-table {
+            font-size: 12px;
+        }
+        
+        th {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #d1d5db;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        .code-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #dc2626;
+            width: 100px;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .dim {
+            color: #6b7280;
+        }
+        
+        .violation-row {
+            background: #fef2f2;
+        }
+        
+        tr.separator {
+            height: 8px;
+            background: #f3f4f6;
+        }
+        
+        tr.separator td {
+            border: none;
+            padding: 0;
+            background: #f3f4f6;
+        }
+        
+        .score-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+        
+        .score-fill {
+            height: 24px;
+            border-radius: 4px;
+            flex: 1;
+            max-width: 200px;
+            position: relative;
+        }
+        
+        .score-text {
+            font-weight: bold;
+            min-width: 45px;
+            text-align: right;
+            color: #374151;
+            font-size: 12px;
+        }
+        
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin: 20px 0;
+        }
+        
+        .score-section {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 6px;
+        }
+        
+        .score-section h3 {
+            color: #374151;
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .score-item span {
+            font-size: 13px;
+            color: #4b5563;
+            min-width: 200px;
+        }
+        
+        .debate-scoreboard {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+        
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #374151;
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            color: #0891b2;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .stat-row.warning-row .stat-value {
+            color: #dc2626;
+        }
+        
+        .compliance-status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+            background: #f9fafb;
+        }
+        
+        h3 {
+            color: #374151;
+            font-size: 16px;
+            margin: 15px 0 10px 0;
+        }
+        
+        .recommendations {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .recommendations li {
+            color: #15803d;
+            margin-bottom: 8px;
+            list-style: none;
+        }
+        
+        .recommendations li:before {
+            content: "✓ ";
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .audit-summary {
+            background: #eff6ff;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            color: #0c4a6e;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .justifications {
+            background: #fef9e7;
+            border-left: 4px solid #eab308;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .justifications p {
+            color: #664d03;
+            margin-bottom: 8px;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .section-header {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Medical Coding AI — Final Compliance Report</h1>
+            <p>Automated coding analysis with compliance assessment, debate resolution, and human comparison</p>
+        </div>
+        
+        <div class="meta-info">
+            <div class="meta-item">
+                <strong>Generated</strong>
+                <span>2026-03-27 10:57:48</span>
+            </div>
+            <div class="meta-item">
+                <strong>Report Version</strong>
+                <span>v2.0 (Full HTML Export)</span>
+            </div>
+        </div>
+        
+        <!-- Clinical Note -->
+        <h2 class="section-header">📝 Clinical Note Summary</h2>
+        <div class="clinical-note">Dizziness with migraine.</div>
+        
+        <!-- Per-Agent Codes -->
+        <h2 class="section-header">🏥 Per-Agent Analysis</h2>
+        <h3 class="section-title">🏥 Clinical Accuracy Agent</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">R42</td>
+                <td>Dizziness and giddiness</td>
+                <td class="dim">principal</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient presents with dizziness.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">G43.9</td>
+                <td>Migraine, not elsewhere classified</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient also presents with migraine.</td>
+            </tr>
+            </tbody></table><div class="panel"><strong>Notes:</strong> The patient presents with dizziness and migraine. There are no procedure or medication documented.</div>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <h3 class="section-title">💰 Revenue Optimization Agent</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">R42</td>
+                <td>Dizziness and giddiness</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">The patient presents with dizziness.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">G43.9</td>
+                <td>Migraine, not elsewhere classified</td>
+                <td class="dim">principal</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">The patient presents with migraine.</td>
+            </tr>
+            </tbody></table><div class="panel"><strong>Notes:</strong> No procedures or services other than evaluation and management appear to be documented. The patient&#39;s dizziness and migraine are both coded as the presenting issues.</div>
+        
+        <!-- Debate -->
+        <h2 class="section-header">⚖️ Debate Resolution</h2>
+    <div class="debate-scoreboard">
+        <div class="stat-row">
+            <span class="stat-label">🤝 Consensus Codes:</span>
+            <span class="stat-value">2</span></div>
+        <div class="stat-row">
+            <span class="stat-label">⚖️ Conflicts Resolved:</span>
+            <span class="stat-value">2</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">🏥 Clinical Wins:</span>
+            <span class="stat-value">2</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">💰 Revenue Wins:</span>
+            <span class="stat-value">0</span>
+        </div>
+    </div><table class="conflicts-table"><thead><tr><th>Code</th><th>Type</th><th>Conflict</th><th>Clinical</th><th>Revenue</th><th>Winner</th><th>Resolution</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">R42</td>
+                <td class="dim">ICD-10</td>
+                <td class="dim">different_confidence</td>
+                <td>Dizziness and giddiness, confidence 1.00</td>
+                <td>Dizziness and giddiness, confidence 0.80</td>
+                <td><strong>🏥 Clinical</strong></td>
+                <td>Clinical agent wins due to higher confidence</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">G43.9</td>
+                <td class="dim">ICD-10</td>
+                <td class="dim">different_confidence</td>
+                <td>Migraine, not elsewhere classified, confidence 1.00</td>
+                <td>Migraine, not elsewhere classified, confidence 0.80</td>
+                <td><strong>🏥 Clinical</strong></td>
+                <td>Clinical agent wins due to higher confidence</td>
+            </tr>
+            </tbody></table>
+        
+        <!-- Final Codes -->
+        <h2 class="section-header">📋 Final Resolved Codes (Post-Debate)</h2>
+        
+        <h3 class="section-title">ICD-10-CM Codes</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th></tr></thead><tbody><tr><td class="code-cell">G43.9</td><td>Migraine, not elsewhere classified</td><td>principal</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">R42</td><td>Dizziness and giddiness</td><td>secondary</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr></tbody></table>
+        
+        <p class="dim">No CPT codes</p>
+        
+        <p class="dim">No HCPCS codes</p>
+        
+        <!-- Comparison -->
+        <h2 class="section-header">🔄 AI vs Human Comparison</h2><p class="info">Comparison with human coder: <strong>Human Coder</strong></p>
+    <table class="stats-table">
+    <tr><td>Total AI codes (post-debate)</td><td>2</td></tr>
+    <tr><td>Total human codes</td><td>1</td></tr>
+    <tr><td>Exact matches</td><td>0</td></tr>
+    <tr><td>AI-only codes</td><td>2</td></tr>
+    <tr><td>Human-only codes</td><td>1</td></tr>
+    <tr><td>Unit/quantity mismatches</td><td>0</td></tr>
+    <tr class="separator"><td colspan="2"></td></tr>
+    <tr><td>Overall match rate</td><td><strong>0.0%</strong></td></tr>
+    <tr><td>ICD-10 match rate</td><td><strong>0.0%</strong></td></tr>
+    <tr><td>CPT match rate</td><td><strong>100.0%</strong></td></tr>
+    <tr><td>HCPCS match rate</td><td><strong>100.0%</strong></td></tr>
+    <tr class="separator"><td colspan="2"></td></tr>
+    <tr><td>AI accuracy vs human</td><td><strong>0.0%</strong></td></tr>
+    <tr><td>Human agreement with AI</td><td><strong>0.0%</strong></td></tr>
+    </table>
+    <h3 class="section-title warning">⚠️ Discrepancies</h3><table class="codes-table"><thead><tr><th>Type</th><th>Code</th><th>AI Code</th><th>Human Code</th><th>Severity</th><th>Impact</th></tr></thead><tbody><tr>
+                <td><strong>ai_only</strong></td>
+                <td class="code-cell">G43.9</td>
+                <td class="dim">G43.9</td>
+                <td class="dim">—</td>
+                <td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td>
+                <td>AI coded G43.9 — human did not. Verify documentation.</td>
+            </tr><tr>
+                <td><strong>ai_only</strong></td>
+                <td class="code-cell">R42</td>
+                <td class="dim">R42</td>
+                <td class="dim">—</td>
+                <td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td>
+                <td>AI coded R42 — human did not. Verify documentation.</td>
+            </tr><tr>
+                <td><strong>human_only</strong></td>
+                <td class="code-cell">R51.9</td>
+                <td class="dim">—</td>
+                <td class="dim">R51.9</td>
+                <td><span style="color: #ef4444; font-weight: bold;">HIGH</span></td>
+                <td>Human coded R51.9 — AI missed it. Review documentation.</td>
+            </tr></tbody></table>
+        
+        <!-- Compliance -->
+        <h2 class="section-header">📋 Compliance & Risk Assessment</h2><div class="compliance-status" style="border-left: 4px solid #22c55e;"><strong style="color: #22c55e;">✅ COMPLIANT</strong><p>✓ All codes pass NCCI and MUE validation. ℹ 2 LCD coverage issue(s) noted. ⚠ 1 potentially missed code(s).</p></div>
+        
+        <!-- Audit Findings -->
+        <h2 class="section-header">🔍 Audit Findings</h2><table class="findings-table"><thead><tr><th>Type</th><th>Code</th><th>Finding</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody><tr><td><strong>missing</strong></td><td class="code-cell">None</td><td>The documentation mentions &#39;Dizziness with migraine&#39; but no CPT code is assigned. Typically, an E/M or other service code should be considered for such an encounter.</td><td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td><td>Assign an appropriate CPT code for the office visit or encounter based on the level of service provided.</td></tr><tr><td><strong>high_risk</strong></td><td class="code-cell">G43.9, R42</td><td>The combination of migraine and dizziness can be a high-risk area for OIG and RAC audits due to the potential for overutilization or improper coding.</td><td><span style="color: #ef4444; font-weight: bold;">HIGH</span></td><td>Verify the medical necessity and proper coding for the combination of these diagnoses in the patient&#39;s record.</td></tr><tr><td><strong>incorrect</strong></td><td class="code-cell">G43.9</td><td>The code G43.9 is used for &#39;Migraine, not elsewhere classified.&#39; If the migraine is with dizziness, a more specific code might be available, such as G43.1.</td><td><span style="color: #22c55e; font-weight: bold;">LOW</span></td><td>Consider using a more specific ICD-10 code if the documentation supports it, such as G43.1 for migraine with dizziness.</td></tr></tbody></table>
+        
+        <!-- Justifications -->
+        <h2 class="section-header">💡 Code Justifications</h2><div class="justifications"><p><strong>G43.9:</strong> The clinical note mentions &#39;migraine&#39;, which supports coding G43.9 for migraine, unspecified.</p><p><strong>R42:</strong> The clinical note mentions &#39;dizziness&#39;, which directly supports coding R42 for dizziness and giddiness.</p><p><strong>R51.9:</strong> The clinical note mentions &#39;dizziness&#39;, but R51.9 is a more general code for &#39;headache&#39;, which is not specifically mentioned. However, it could be argued that dizziness is sometimes classified under general symptoms.</p></div>
+        
+        <!-- Scores -->
+        <h2 class="section-header">📊 Confidence & Risk Scores</h2><div class="scores-grid"><div class="score-section"><h3>Coding Confidence (higher is better)</h3><div class="score-item"><span>Overall Coding Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 81%; background-color: #22c55e;"></div>
+        <span class="score-text">81%</span>
+    </div>
+    </div><div class="score-item"><span>ICD-10 Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 81%; background-color: #22c55e;"></div>
+        <span class="score-text">81%</span>
+    </div>
+    </div><div class="score-item"><span>CPT Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 15%; background-color: #ef4444;"></div>
+        <span class="score-text">15%</span>
+    </div>
+    </div><div class="score-item"><span>HCPCS Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 87%; background-color: #22c55e;"></div>
+        <span class="score-text">87%</span>
+    </div>
+    </div></div><div class="score-section"><h3>Compliance Risk (lower is better)</h3>
+    <div class="score-item">
+        <span>Risk Score</span>
+        <div class="score-bar">
+            <div class="score-fill" style="width: 41%; background-color: #eab308;"></div>
+            <span class="score-text">41%</span>
+        </div>
+    </div>
+    <div class="score-item">
+        <span>Risk Level</span>
+        <span style="color: #eab308; font-weight: bold;">MEDIUM</span>
+    </div>
+    
+        <div class="score-item"><span>AI vs Human Match Rate</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 0%; background-color: #ef4444;"></div>
+        <span class="score-text">0%</span>
+    </div>
+    </div>
+        <div class="score-item"><span>AI Accuracy vs Human</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 0%; background-color: #ef4444;"></div>
+        <span class="score-text">0%</span>
+    </div>
+    </div>
+        <div class="score-item"><span>Clinical vs Revenue Agreement</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 50%; background-color: #eab308;"></div>
+        <span class="score-text">50%</span>
+    </div>
+    </div></div></div>
+        
+        <!-- Recommendations -->
+        <h2 class="section-header">🎯 Recommendations</h2><div class="recommendations"><ul><li>Consider missed codes: {&#39;brief description&#39;: &#39;Evaluation and Management service for office visit&#39;, &#39;suggested_code&#39;: &#39;99213&#39;}</li><li>HIGH RISK – Verify the medical necessity and proper coding for the combination of these diagnoses in the patient&#39;s record.</li><li>AI coded G43.9 (ICD-10) — human missed, review for overcoding.</li><li>AI coded R42 (ICD-10) — human missed, review for overcoding.</li><li>Human coded R51.9 (ICD-10) — AI missed, verify documentation.</li></ul></div>
+        
+        <!-- Audit Summary -->
+        <h2 class="section-header">📊 Audit Summary</h2><div class="audit-summary">The clinical agent&#39;s codes were chosen due to higher confidence levels. No CPT or HCPCS codes were submitted.
+
+Automated audit completed. Review all high-severity findings before submission.</div>
+        
+        <div class="footer">
+            <p>Medical Coding AI System | Powered by Llama 4 Scout + LangGraph + ChromaDB</p>
+            <p>Report generated: 2026-03-27 10:57:48</p>
+            <p style="margin-top:20px;font-size:11px;color:#9ca3af;">This report contains comprehensive compliance analysis. Review all high-severity findings before claim submission.</p>
+        </div>
+    </div>
+</body>
+</html>

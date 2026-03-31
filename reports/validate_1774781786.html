@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Coding AI — Final Compliance Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            line-height: 1.7;
+            color: #2d3748;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 30px 20px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 15px 10px;
+            }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px 45px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        }
+        
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+            .container {
+                max-width: 100%;
+                box-shadow: none;
+                margin: 0;
+                padding: 20px;
+                background: white;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            table {
+                page-break-inside: avoid;
+                margin: 10px 0 !important;
+            }
+            .section-header {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+            .section-title {
+                page-break-after: avoid;
+            }
+            tr {
+                page-break-inside: avoid;
+            }
+            .meta-info, .clinical-note, .panel, .debate-scoreboard, 
+            .compliance-status, .recommendations, .audit-summary, .justifications {
+                page-break-inside: avoid;
+            }
+            .score-bar .score-fill {
+                border: 1px solid #333;
+            }
+            .violation-row {
+                background: #f5f5f5 !important;
+            }
+            thead {
+                display: table-header-group;
+            }
+            tfoot {
+                display: table-footer-group;
+            }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1f8a7a 0%, #2ba89d 100%);
+            color: white;
+            padding: 35px;
+            margin: -50px -45px 40px -45px;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+        
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            font-weight: 400;
+        }
+        
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #1f8a7a;
+        }
+        
+        .meta-item {
+            font-size: 13px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+        
+        .meta-item strong {
+            display: inline;
+            color: #1f8a7a;
+            font-weight: 600;
+        }
+        
+        .meta-item span {
+            color: #718096;
+        }
+        
+        .section-header {
+            color: #1a202c;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 45px 0 25px 0;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #1f8a7a;
+            letter-spacing: -0.3px;
+        }
+        
+        .section-title {
+            color: #2d3748;
+            font-size: 17px;
+            font-weight: 600;
+            margin: 25px 0 18px 0;
+            letter-spacing: -0.2px;
+        }
+        
+        .section-title.warning {
+            color: #e53e3e;
+        }
+        
+        .clinical-note {
+            background: linear-gradient(135deg, #f0fdf9 0%, #e6f8f5 100%);
+            border-left: 5px solid #1f8a7a;
+            padding: 18px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #1a202c;
+        }
+        
+        .warning {
+            color: #c05621;
+            padding: 12px 15px;
+            background: #fef5e7;
+            border-left: 4px solid #f39c12;
+            margin: 12px 0;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .info {
+            color: #0e5a8a;
+            padding: 12px 15px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            margin: 12px 0;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .panel {
+            background: #f8fafc;
+            border: 1px solid #cbd5e0;
+            padding: 18px;
+            border-radius: 8px;
+            margin: 18px 0;
+        }
+        
+        .panel strong {
+            color: #1a202c;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+        
+        table.codes-table {
+            font-size: 12px;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #1f8a7a 0%, #2ba89d 100%);
+            color: white;
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 600;
+            border: none;
+        }
+        
+        td {
+            padding: 12px 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        tr:hover {
+            background: #edf2f7;
+        }
+        
+        .code-cell {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-weight: 700;
+            color: #e53e3e;
+            width: 100px;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .dim {
+            color: #718096;
+        }
+        
+        .violation-row {
+            background: #fff5f5;
+        }
+        
+        tr.separator {
+            height: 8px;
+            background: none;
+        }
+        
+        tr.separator td {
+            border: none;
+            padding: 0;
+            background: none;
+        }
+        
+        .score-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 10px 0;
+        }
+        
+        .score-fill {
+            height: 26px;
+            border-radius: 6px;
+            flex: 1;
+            max-width: 200px;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .score-text {
+            font-weight: 700;
+            min-width: 50px;
+            text-align: right;
+            color: #1a202c;
+            font-size: 12px;
+        }
+        
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 28px;
+            margin: 25px 0;
+        }
+        
+        .score-section {
+            background: linear-gradient(135deg, #f0fdf9 0%, #e6f8f5 100%);
+            padding: 24px;
+            border-radius: 10px;
+            border: 1px solid #d1e8e4;
+        }
+        
+        .score-section h3 {
+            color: #1a202c;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            letter-spacing: -0.2px;
+        }
+        
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0;
+        }
+        
+        .score-item span {
+            font-size: 13px;
+            color: #2d3748;
+            min-width: 220px;
+            font-weight: 500;
+        }
+        
+        .debate-scoreboard {
+            background: linear-gradient(135deg, #f0fdf9 0%, #e6f8f5 100%);
+            padding: 24px;
+            border-radius: 10px;
+            margin: 25px 0;
+            border: 1px solid #d1e8e4;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid #cbd5e0;
+            font-size: 14px;
+        }
+        
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #2d3748;
+            font-weight: 600;
+        }
+        
+        .stat-value {
+            color: #1f8a7a;
+            font-weight: 700;
+            font-size: 17px;
+        }
+        
+        .stat-row.warning-row .stat-value {
+            color: #e53e3e;
+        }
+        
+        .compliance-status {
+            padding: 18px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background: #f8fafc;
+            border-left: 5px solid #1f8a7a;
+        }
+        
+        h3 {
+            color: #1a202c;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 18px 0 12px 0;
+            letter-spacing: -0.2px;
+        }
+        
+        .recommendations {
+            background: linear-gradient(135deg, #f0fdf4 0%, #e6fffa 100%);
+            border-left: 5px solid #22863a;
+            padding: 22px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        
+        .recommendations li {
+            color: #22863a;
+            margin-bottom: 10px;
+            list-style: none;
+            font-weight: 500;
+        }
+        
+        .recommendations li:before {
+            content: "✓ ";
+            font-weight: 700;
+            margin-right: 10px;
+        }
+        
+        .audit-summary {
+            background: linear-gradient(135deg, #f0fdf9 0%, #e6f8f5 100%);
+            border-left: 5px solid #1f8a7a;
+            padding: 22px;
+            margin: 25px 0;
+            border-radius: 8px;
+            color: #0c4a6e;
+            line-height: 1.7;
+            font-weight: 500;
+        }
+        
+        .footer {
+            margin-top: 60px;
+            padding-top: 25px;
+            border-top: 2px solid #e2e8f0;
+            color: #718096;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin-bottom: 8px;
+        }
+        
+        .justifications {
+            background: linear-gradient(135deg, #fef9e7 0%, #fff9e6 100%);
+            border-left: 5px solid #d4af37;
+            padding: 22px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        
+        .justifications p {
+            color: #664d03;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .findings-table {
+            font-size: 13px;
+        }
+        
+        .stats-table {
+            font-size: 13px;
+        }
+        
+        .stats-table tr:nth-child(odd) {
+            background: #f8fafc;
+        }
+        
+        .stats-table tr:hover {
+            background: #edf2f7;
+        }
+        
+        .stats-table td:first-child {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .stats-table td:last-child {
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .section-header {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Medical Coding AI — Final Compliance Report</h1>
+            <p>Automated coding analysis with compliance assessment, debate resolution, and human comparison</p>
+        </div>
+        
+        <div class="meta-info">
+            <div class="meta-item">
+                <span>Generated: 2026-03-29 16:26:26</span>
+            </div>
+        </div>
+        
+        <!-- Clinical Note -->
+        <h2 class="section-header">📝 Clinical Note Summary</h2>
+        <div class="clinical-note">A 58-year-old male with a history of Type 2 Diabetes Mellitus and Hypertension presented with complaints of Shortness of Breath and fatigue. 
+Laboratory findings showed elevated creatinine levels indicating Chronic Kidney Disease stage 3. 
+ECG was performed and showed no acute ischemic changes. 
+Blood glucose levels were elevated (HbA1c 9.2%). 
+Patient was managed with insulin therapy and antihypertensive medications. 
+No surgical procedures were performed. 
+Patient&#39;s condition stabilised and discharged with follow-up advice.</div>
+        
+        <!-- Per-Agent Codes -->
+        <h2 class="section-header">🏥 Per-Agent Analysis</h2>
+        <h3 class="section-title">🏥 Clinical Accuracy Agent</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">E11.22</td>
+                <td>Type 2 diabetes mellitus with diabetic nephropathy</td>
+                <td class="dim">principal</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">Patient has Type 2 Diabetes Mellitus and Chronic Kidney Disease stage 3, supporting diabetic nephrop</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">N18.3</td>
+                <td>Chronic kidney disease, stage 3</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">Lab findings showed elevated creatinine levels indicating Chronic Kidney Disease stage 3.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">I10</td>
+                <td>Essential (primary) hypertension</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">Patient has a history of Hypertension.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">R09.02</td>
+                <td>Shortness of breath</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">Patient presented with complaints of Shortness of Breath.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">R53.1</td>
+                <td>Fatigue</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">Patient presented with complaints of fatigue.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">Z79.4</td>
+                <td>Insulin use</td>
+                <td class="dim">additional</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">Patient was managed with insulin therapy.</td>
+            </tr>
+            </tbody></table><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">99213</td>
+                <td>Office or other outpatient visit for the evaluation and management of an established patient</td>
+                <td class="center">1</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">Patient received evaluation and management services.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">93000</td>
+                <td>Electrocardiogram, routine ECG with at least 12 leads</td>
+                <td class="center">1</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">ECG was performed and showed no acute ischemic changes.</td>
+            </tr>
+            </tbody></table><div class="panel"><strong>Notes:</strong> Selected E11.22 as principal diagnosis because it combines diabetes and CKD, which are both documented. CPT 99213 was chosen for office visit and 93000 for the ECG performed.</div>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <h3 class="section-title">💰 Revenue Optimization Agent</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">E11.22</td>
+                <td>Type 2 diabetes mellitus with diabetic nephropathy</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">Patient has Type 2 Diabetes Mellitus and Chronic Kidney Disease stage 3, suggesting diabetic nephrop</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">N18.3</td>
+                <td>Chronic kidney disease, stage 3</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">Laboratory findings showed elevated creatinine levels indicating Chronic Kidney Disease stage 3.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">I10</td>
+                <td>Essential (primary) hypertension</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">Patient has a history of Hypertension.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">R09.02</td>
+                <td>Shortness of breath</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">Patient presented with complaints of Shortness of Breath.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">R53.1</td>
+                <td>Fatigue</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">Patient presented with complaints of fatigue.</td>
+            </tr>
+            </tbody></table><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">99213</td>
+                <td>Office or other outpatient visit for the evaluation and management of an established patient</td>
+                <td class="center">1</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">Patient presented with multiple complaints and was managed with insulin therapy and antihypertensive</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">93000</td>
+                <td>Electrocardiogram, routine ECG with at least 12 leads</td>
+                <td class="center">1</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">ECG was performed and showed no acute ischemic changes.</td>
+            </tr>
+            </tbody></table><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">J insulin</td>
+                <td>Insulin for administration</td>
+                <td class="dim">drug</td>
+                <td class="center">1</td>
+            </tr>
+            </tbody></table><div class="panel"><strong>Notes:</strong> No surgical procedures were performed. The patient&#39;s condition stabilised and was discharged with follow-up advice.</div>
+        
+        <!-- Debate -->
+        <h2 class="section-header">⚖️ Debate Resolution</h2>
+    <div class="debate-scoreboard">
+        <div class="stat-row">
+            <span class="stat-label">🤝 Consensus Codes:</span>
+            <span class="stat-value">7</span></div>
+        <div class="stat-row">
+            <span class="stat-label">⚖️ Conflicts Resolved:</span>
+            <span class="stat-value">2</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">🏥 Clinical Wins:</span>
+            <span class="stat-value">2</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">💰 Revenue Wins:</span>
+            <span class="stat-value">0</span>
+        </div>
+    </div><table class="conflicts-table"><thead><tr><th>Code</th><th>Type</th><th>Conflict</th><th>Clinical</th><th>Revenue</th><th>Winner</th><th>Resolution</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">Z79.4</td>
+                <td class="dim">ICD-10</td>
+                <td class="dim">different_code</td>
+                <td>Insulin use</td>
+                <td>None</td>
+                <td><strong>🏥 Clinical</strong></td>
+                <td>Clinical agent&#39;s Z79.4 is supported by note</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">None</td>
+                <td class="dim">HCPCS</td>
+                <td class="dim">different_code</td>
+                <td>None</td>
+                <td>Insulin for administration</td>
+                <td><strong>🏥 Clinical</strong></td>
+                <td>Revenue agent&#39;s HCPCS requires additional documentation</td>
+            </tr>
+            </tbody></table>
+        
+        <!-- Final Codes -->
+        <h2 class="section-header">📋 Final Resolved Codes (Post-Debate)</h2>
+        
+        <h3 class="section-title">ICD-10-CM Codes</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th></tr></thead><tbody><tr><td class="code-cell">E11.22</td><td>Type 2 diabetes mellitus with diabetic nephropathy</td><td>principal</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">N18.3</td><td>Chronic kidney disease, stage 3</td><td>secondary</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">I10</td><td>Essential (primary) hypertension</td><td>secondary</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">R09.02</td><td>Shortness of breath</td><td>additional</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">R53.1</td><td>Fatigue</td><td>additional</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">Z79.4</td><td>Insulin use</td><td>additional</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr></tbody></table>
+        
+        <h3 class="section-title">CPT Codes</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Confidence</th></tr></thead><tbody><tr><td class="code-cell">99213</td><td>Office or other outpatient visit for the evaluation and management of an established patient</td><td class="center">1</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">93000</td><td>Electrocardiogram, routine ECG with at least 12 leads</td><td class="center">1</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr></tbody></table>
+        
+        <p class="dim">No HCPCS codes</p>
+        
+        <!-- Human Codes Input -->
+        <h2 class="section-header">👤 Human Coder Input</h2><p class="info">Codes provided by: <strong>Human Coder</strong></p><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+        <div style="background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 15px;">
+            <h3 style="color: #1e40af; font-size: 14px; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
+                ICD-10 (3)
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+        
+                <div style="background: white; padding: 8px 12px; border-radius: 4px; border-left: 3px solid #1e40af; font-family: 'Courier New', monospace; font-weight: bold; color: #1e40af;">
+                    E11.22
+                </div>
+            
+                <div style="background: white; padding: 8px 12px; border-radius: 4px; border-left: 3px solid #1e40af; font-family: 'Courier New', monospace; font-weight: bold; color: #1e40af;">
+                    N18.3
+                </div>
+            
+                <div style="background: white; padding: 8px 12px; border-radius: 4px; border-left: 3px solid #1e40af; font-family: 'Courier New', monospace; font-weight: bold; color: #1e40af;">
+                    I10
+                </div>
+            </div></div>
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 15px;">
+            <h3 style="color: #15803d; font-size: 14px; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
+                CPT (1)
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+        
+                <div style="background: white; padding: 8px 12px; border-radius: 4px; border-left: 3px solid #15803d; font-family: 'Courier New', monospace; font-weight: bold; color: #15803d;">
+                    93000
+                </div>
+            </div></div>
+        <div style="background: #fdfce8; border: 1px solid #fef08a; border-radius: 6px; padding: 15px;">
+            <h3 style="color: #854d0e; font-size: 14px; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
+                HCPCS (1)
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+        
+                <div style="background: white; padding: 8px 12px; border-radius: 4px; border-left: 3px solid #854d0e; font-family: 'Courier New', monospace; font-weight: bold; color: #854d0e;">
+                    A9270
+                </div>
+            </div></div></div>
+        
+        <!-- Comparison -->
+        <h2 class="section-header">🔄 AI vs Human Comparison</h2><p class="info">Comparison with human coder: <strong>Human Coder</strong></p>
+    <table class="stats-table">
+    <tr><td>Total AI codes (post-debate)</td><td>8</td></tr>
+    <tr><td>Total human codes</td><td>5</td></tr>
+    <tr><td>Exact matches</td><td>4</td></tr>
+    <tr><td>AI-only codes</td><td>4</td></tr>
+    <tr><td>Human-only codes</td><td>1</td></tr>
+    <tr><td>Unit/quantity mismatches</td><td>0</td></tr>
+    <tr class="separator"><td colspan="2"></td></tr>
+    <tr><td>Overall match rate</td><td><strong>44.4%</strong></td></tr>
+    <tr><td>ICD-10 match rate</td><td><strong>50.0%</strong></td></tr>
+    <tr><td>CPT match rate</td><td><strong>50.0%</strong></td></tr>
+    <tr><td>HCPCS match rate</td><td><strong>0.0%</strong></td></tr>
+    <tr class="separator"><td colspan="2"></td></tr>
+    <tr><td>AI accuracy vs human</td><td><strong>80.0%</strong></td></tr>
+    <tr><td>Human agreement with AI</td><td><strong>50.0%</strong></td></tr>
+    </table>
+    <h3 class="section-title">✅ Agreed Codes</h3><table class="codes-table"><thead><tr><th>Code</th><th>Type</th><th>Description</th><th>AI Confidence</th></tr></thead><tbody><tr>
+                <td class="code-cell">E11.22</td>
+                <td class="dim">ICD-10</td>
+                <td>Type 2 diabetes mellitus with diabetic nephropathy</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+            </tr><tr>
+                <td class="code-cell">I10</td>
+                <td class="dim">ICD-10</td>
+                <td>Essential (primary) hypertension</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+            </tr><tr>
+                <td class="code-cell">N18.3</td>
+                <td class="dim">ICD-10</td>
+                <td>Chronic kidney disease, stage 3</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+            </tr><tr>
+                <td class="code-cell">93000</td>
+                <td class="dim">CPT</td>
+                <td>Electrocardiogram, routine ECG with at least 12 leads</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+            </tr></tbody></table><h3 class="section-title warning">⚠️ Discrepancies</h3><table class="codes-table"><thead><tr><th>Type</th><th>Code</th><th>AI Code</th><th>Human Code</th><th>Severity</th><th>Impact</th></tr></thead><tbody><tr>
+                <td><strong>ai_only</strong></td>
+                <td class="code-cell">R09.02</td>
+                <td class="dim">R09.02</td>
+                <td class="dim">—</td>
+                <td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td>
+                <td>AI coded R09.02 — human did not. Verify documentation.</td>
+            </tr><tr>
+                <td><strong>ai_only</strong></td>
+                <td class="code-cell">R53.1</td>
+                <td class="dim">R53.1</td>
+                <td class="dim">—</td>
+                <td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td>
+                <td>AI coded R53.1 — human did not. Verify documentation.</td>
+            </tr><tr>
+                <td><strong>ai_only</strong></td>
+                <td class="code-cell">Z79.4</td>
+                <td class="dim">Z79.4</td>
+                <td class="dim">—</td>
+                <td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td>
+                <td>AI coded Z79.4 — human did not. Verify documentation.</td>
+            </tr><tr>
+                <td><strong>ai_only</strong></td>
+                <td class="code-cell">99213</td>
+                <td class="dim">99213</td>
+                <td class="dim">—</td>
+                <td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td>
+                <td>AI coded 99213 — human did not. Verify documentation.</td>
+            </tr><tr>
+                <td><strong>human_only</strong></td>
+                <td class="code-cell">A9270</td>
+                <td class="dim">—</td>
+                <td class="dim">A9270</td>
+                <td><span style="color: #ef4444; font-weight: bold;">HIGH</span></td>
+                <td>Human coded A9270 — AI missed it. Review documentation.</td>
+            </tr></tbody></table>
+        
+        <!-- Compliance -->
+        <h2 class="section-header">📋 Compliance & Risk Assessment</h2><div class="compliance-status" style="border-left: 4px solid #22c55e;"><strong style="color: #22c55e;">✅ COMPLIANT</strong><p>✓ All codes pass NCCI and MUE validation.</p></div>
+        
+        <!-- Audit Findings -->
+        <h2 class="section-header">🔍 Audit Findings</h2><table class="findings-table"><thead><tr><th>Type</th><th>Code</th><th>Finding</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody><tr><td><strong>upcoding</strong></td><td class="code-cell">99213</td><td>The office visit code 99213 may be considered upcoded as the documentation does not support a high-complexity visit.</td><td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td><td>Review documentation to ensure visit complexity supports code 99213 or consider recoding to a lower complexity visit.</td></tr><tr><td><strong>missing</strong></td><td class="code-cell">Z79.4</td><td>The patient&#39;s elevated HbA1c level (9.2%) indicates poor control of diabetes; consider adding code E11.9 to specify the patient&#39;s diabetes status.</td><td><span style="color: #22c55e; font-weight: bold;">LOW</span></td><td>Consider adding code E11.9 to capture the patient&#39;s diabetes status.</td></tr><tr><td><strong>high_risk</strong></td><td class="code-cell">E11.22</td><td>The combination of codes E11.22, N18.3, and I10 may trigger a high-risk audit due to the potential for inflated risk adjustment scores.</td><td><span style="color: #ef4444; font-weight: bold;">HIGH</span></td><td>Verify documentation supports the reported conditions and ensure accurate risk adjustment scores.</td></tr></tbody></table>
+        
+        <!-- Justifications -->
+        <h2 class="section-header">💡 Code Justifications</h2><div class="justifications"><p><strong>E11.22:</strong> Type 2 Diabetes Mellitus with diabetic nephrosis is supported by the patient&#39;s history and lab findings.</p><p><strong>N18.3:</strong> Chronic Kidney Disease stage 3 is directly mentioned in the documentation.</p><p><strong>I10:</strong> Hypertension is listed in the patient&#39;s history.</p><p><strong>R09.02:</strong> Shortness of Breath is a presenting complaint, making R09.02 a valid code.</p><p><strong>R53.1:</strong> Fatigue is a presenting complaint, making R53.1 a valid code.</p><p><strong>Z79.4:</strong> Z79.4 indicates insulin use, which is mentioned in the management plan.</p><p><strong>99213:</strong> Office or other outpatient visit for the evaluation and management of an established patient; requires a comprehensive examination; medical decision making of moderate complexity.</p><p><strong>93000:</strong> ECG is directly mentioned as being performed.</p><p><strong>A9270:</strong> There is no clear evidence in the documentation to support the use of A9270.</p></div>
+        
+        <!-- Scores -->
+        <h2 class="section-header">📊 Confidence & Risk Scores</h2><div class="scores-grid"><div class="score-section"><h3>Coding Confidence (higher is better)</h3><div class="score-item"><span>Overall Coding Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 91%; background-color: #22c55e;"></div>
+        <span class="score-text">91%</span>
+    </div>
+    </div><div class="score-item"><span>ICD-10 Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 91%; background-color: #22c55e;"></div>
+        <span class="score-text">91%</span>
+    </div>
+    </div><div class="score-item"><span>CPT Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 91%; background-color: #22c55e;"></div>
+        <span class="score-text">91%</span>
+    </div>
+    </div><div class="score-item"><span>HCPCS Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 95%; background-color: #22c55e;"></div>
+        <span class="score-text">95%</span>
+    </div>
+    </div></div><div class="score-section"><h3>Compliance Risk (lower is better)</h3>
+    <div class="score-item">
+        <span>Risk Score</span>
+        <div class="score-bar">
+            <div class="score-fill" style="width: 28%; background-color: #22c55e;"></div>
+            <span class="score-text">28%</span>
+        </div>
+    </div>
+    <div class="score-item">
+        <span>Risk Level</span>
+        <span style="color: #22c55e; font-weight: bold;">LOW</span>
+    </div>
+    
+        <div class="score-item"><span>AI vs Human Match Rate</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 44%; background-color: #ef4444;"></div>
+        <span class="score-text">44%</span>
+    </div>
+    </div>
+        <div class="score-item"><span>AI Accuracy vs Human</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </div>
+        <div class="score-item"><span>Clinical vs Revenue Agreement</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 77%; background-color: #22c55e;"></div>
+        <span class="score-text">77%</span>
+    </div>
+    </div></div></div>
+        
+        <!-- Recommendations -->
+        <h2 class="section-header">🎯 Recommendations</h2><div class="recommendations"><ul><li>HIGH RISK – Verify documentation supports the reported conditions and ensure accurate risk adjustment scores.</li><li>AI coded R09.02 (ICD-10) — human missed, review for overcoding.</li><li>AI coded R53.1 (ICD-10) — human missed, review for overcoding.</li><li>AI coded Z79.4 (ICD-10) — human missed, review for overcoding.</li><li>AI coded 99213 (CPT) — human missed, review for overcoding.</li><li>Human coded A9270 (HCPCS) — AI missed, verify documentation.</li></ul></div>
+        
+        <!-- Audit Summary -->
+        <h2 class="section-header">📊 Audit Summary</h2><div class="audit-summary">Agents agreed on most codes. Clinical agent won insulin use (Z79.4) and no HCPCS code.
+
+Automated audit completed. Review all high-severity findings before submission.</div>
+        
+        <div class="footer">
+            <p>Report generated: 2026-03-29 16:26:26</p>
+            <p style="margin-top:18px;font-size:12px;color:#718096;">This report contains comprehensive compliance analysis. Review all high-severity findings before claim submission.</p>
+        </div>
+    </div>
+</body>
+</html>

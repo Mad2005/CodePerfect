@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Coding AI — Final Compliance Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #f9fafb;
+            padding: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+            .container {
+                max-width: 100%;
+                box-shadow: none;
+                margin: 0;
+                padding: 20px;
+                background: white;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            table {
+                page-break-inside: avoid;
+                margin: 10px 0 !important;
+            }
+            .section-header {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+            .section-title {
+                page-break-after: avoid;
+            }
+            tr {
+                page-break-inside: avoid;
+            }
+            .meta-info, .clinical-note, .panel, .debate-scoreboard, 
+            .compliance-status, .recommendations, .audit-summary, .justifications {
+                page-break-inside: avoid;
+            }
+            .score-bar .score-fill {
+                border: 1px solid #333;
+            }
+            .violation-row {
+                background: #f5f5f5 !important;
+            }
+            thead {
+                display: table-header-group;
+            }
+            tfoot {
+                display: table-footer-group;
+            }
+        }
+        
+        .header {
+            border-bottom: 3px solid #0891b2;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #0891b2;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .meta-info {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+            padding: 15px 0;
+        }
+        
+        .meta-item {
+            font-size: 13px;
+            color: #6b7280;
+        }
+        
+        .meta-item strong {
+            display: none;
+        }
+        
+        .meta-item span {
+            color: #6b7280;
+        }
+        
+        .section-header {
+            color: #1f2937;
+            font-size: 22px;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .section-title {
+            color: #374151;
+            font-size: 18px;
+            margin: 20px 0 15px 0;
+            font-weight: 600;
+        }
+        
+        .section-title.warning {
+            color: #dc2626;
+        }
+        
+        .clinical-note {
+            background: #eff6ff;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #1e3a8a;
+        }
+        
+        .warning {
+            color: #d97706;
+            padding: 10px;
+            background: #fef3c7;
+            border-left: 3px solid #f59e0b;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .info {
+            color: #0369a1;
+            padding: 10px;
+            background: #e0f2fe;
+            border-left: 3px solid #0284c7;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .panel {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        .panel strong {
+            color: #374151;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+        
+        table.codes-table {
+            font-size: 12px;
+        }
+        
+        th {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #d1d5db;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        .code-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #dc2626;
+            width: 100px;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .dim {
+            color: #6b7280;
+        }
+        
+        .violation-row {
+            background: #fef2f2;
+        }
+        
+        tr.separator {
+            height: 8px;
+            background: #f3f4f6;
+        }
+        
+        tr.separator td {
+            border: none;
+            padding: 0;
+            background: #f3f4f6;
+        }
+        
+        .score-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+        
+        .score-fill {
+            height: 24px;
+            border-radius: 4px;
+            flex: 1;
+            max-width: 200px;
+            position: relative;
+        }
+        
+        .score-text {
+            font-weight: bold;
+            min-width: 45px;
+            text-align: right;
+            color: #374151;
+            font-size: 12px;
+        }
+        
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin: 20px 0;
+        }
+        
+        .score-section {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 6px;
+        }
+        
+        .score-section h3 {
+            color: #374151;
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .score-item span {
+            font-size: 13px;
+            color: #4b5563;
+            min-width: 200px;
+        }
+        
+        .debate-scoreboard {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+        
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #374151;
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            color: #0891b2;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .stat-row.warning-row .stat-value {
+            color: #dc2626;
+        }
+        
+        .compliance-status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+            background: #f9fafb;
+        }
+        
+        h3 {
+            color: #374151;
+            font-size: 16px;
+            margin: 15px 0 10px 0;
+        }
+        
+        .recommendations {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .recommendations li {
+            color: #15803d;
+            margin-bottom: 8px;
+            list-style: none;
+        }
+        
+        .recommendations li:before {
+            content: "✓ ";
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .audit-summary {
+            background: #eff6ff;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            color: #0c4a6e;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .justifications {
+            background: #fef9e7;
+            border-left: 4px solid #eab308;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .justifications p {
+            color: #664d03;
+            margin-bottom: 8px;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .section-header {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Medical Coding AI — Final Compliance Report</h1>
+            <p>Automated coding analysis with compliance assessment, debate resolution, and human comparison</p>
+        </div>
+        
+        <div class="meta-info">
+            <div class="meta-item">
+                <span>Generated: 2026-03-27 20:47:14</span>
+            </div>
+        </div>
+        
+        <!-- Clinical Note -->
+        <h2 class="section-header">📝 Clinical Note Summary</h2>
+        <div class="clinical-note">Here is the cleaned and normalised clinical note:
+
+Clinical Discharge Summary
+
+Patient Details:
+Name: John Doe
+Age: 58
+Gender: Male
+Patient ID: P123456
+
+Admission Details:
+Date of Admission: 10 March 2026
+Date of Discharge: 15 March 2026
+Reason for Admission: Chest pain and Shortness of Breath
+
+Clinical Findings:
+The patient presented with elevated blood pressure and abnormal ECG findings.
+
+Diagnosis:
+Primary: Acute Myocardial Infarction
+Secondary: Hypertension, Type 2 Diabetes Mellitus
+
+Treatment Provided:
+The patient received ECG monitoring, coronary angiography, and medication management, including insulin and antihypertensives.
+
+Procedures:
+Percutaneous Coronary Intervention (PCI)
+
+Discharge Medications:
+Aspirin, Atorvastatin, Metformin, Lisinopril
+
+Follow-up Advice:
+The patient is advised to follow up after 2 weeks and to maintain a healthy diet and exercise routine.</div>
+        
+        <!-- Per-Agent Codes -->
+        <h2 class="section-header">🏥 Per-Agent Analysis</h2>
+        <h3 class="section-title">🏥 Clinical Accuracy Agent</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">I21.9</td>
+                <td>Acute myocardial infarction, unspecified</td>
+                <td class="dim">principal</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient presented with Acute Myocardial Infarction as the primary diagnosis.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">E11.9</td>
+                <td>Type 2 diabetes mellitus without complications</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient has Type 2 Diabetes Mellitus as a secondary diagnosis.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">I10</td>
+                <td>Essential (primary) hypertension</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient has Hypertension as a secondary diagnosis.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">R06.2</td>
+                <td>Shortness of breath</td>
+                <td class="dim">additional</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient presented with shortness of breath.</td>
+            </tr>
+            </tbody></table><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">92928</td>
+                <td>Percutaneous coronary intervention, coronary artery; with stent</td>
+                <td class="center">1</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient underwent Percutaneous Coronary Intervention (PCI).</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">93000</td>
+                <td>Electrocardiogram, routine ECG with at least 12 leads; with interpretation and report</td>
+                <td class="center">1</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient received ECG monitoring.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">93458</td>
+                <td>Coronary angiography, left heart catheterization; with atherectomy</td>
+                <td class="center">1</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient underwent coronary angiography.</td>
+            </tr>
+            </tbody></table><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">J0180</td>
+                <td>Aspirin, 325 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">1</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J1390</td>
+                <td>Atorvastatin, 10 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">1</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J2760</td>
+                <td>Metformin, 500 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">1</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J05</td>
+                <td>Lisinopril, 5 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">1</td>
+            </tr>
+            </tbody></table><div class="panel"><strong>Notes:</strong> The principal diagnosis is Acute Myocardial Infarction. The CPT codes include Percutaneous Coronary Intervention (PCI), ECG monitoring, and coronary angiography. The HCPCS codes include the prescribed medications: Aspirin, Atorvastatin, Metformin, and Lisinopril.</div>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <h3 class="section-title">💰 Revenue Optimization Agent</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">I21.9</td>
+                <td>Acute myocardial infarction, unspecified</td>
+                <td class="dim">principal</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient presented with Acute Myocardial Infarction as the primary diagnosis.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">E11.9</td>
+                <td>Type 2 diabetes mellitus without complications</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient has Type 2 Diabetes Mellitus as a secondary diagnosis.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">I10</td>
+                <td>Essential (primary) hypertension</td>
+                <td class="dim">secondary</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient has Hypertension as a secondary diagnosis.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">R06.2</td>
+                <td>Shortness of breath</td>
+                <td class="dim">additional</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 80%; background-color: #22c55e;"></div>
+        <span class="score-text">80%</span>
+    </div>
+    </td>
+                <td class="dim">The patient presented with shortness of breath as a symptom.</td>
+            </tr>
+            </tbody></table><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Confidence</th><th>Rationale</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">92928</td>
+                <td>Percutaneous coronary intervention, coronary artery; with stent</td>
+                <td class="center">1</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient underwent Percutaneous Coronary Intervention (PCI).</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">93000</td>
+                <td>Electrocardiogram, routine ECG with at least 12 leads</td>
+                <td class="center">1</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient received ECG monitoring.</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">93555</td>
+                <td>Coronary angiography, including right and left heart catheterization</td>
+                <td class="center">1</td>
+                <td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td>
+                <td class="dim">The patient underwent coronary angiography.</td>
+            </tr>
+            </tbody></table><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">J0180</td>
+                <td>Aspirin, 325 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">30</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J1390</td>
+                <td>Atorvastatin, 10 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">30</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J2760</td>
+                <td>Metformin, 500 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">30</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J05</td>
+                <td>Lisinopril, 5 mg</td>
+                <td class="dim">drug</td>
+                <td class="center">30</td>
+            </tr>
+            </tbody></table><div class="panel"><strong>Notes:</strong> The patient received a range of services including diagnosis and treatment of acute myocardial infarction, type 2 diabetes mellitus, and hypertension. The patient underwent PCI, ECG monitoring, and coronary angiography. The patient was discharged on several medications including Aspirin, Atorvastatin, Metformin, and Lisinopril.</div>
+        
+        <!-- Debate -->
+        <h2 class="section-header">⚖️ Debate Resolution</h2>
+    <div class="debate-scoreboard">
+        <div class="stat-row">
+            <span class="stat-label">🤝 Consensus Codes:</span>
+            <span class="stat-value">10</span></div>
+        <div class="stat-row">
+            <span class="stat-label">⚖️ Conflicts Resolved:</span>
+            <span class="stat-value">3</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">🏥 Clinical Wins:</span>
+            <span class="stat-value">3</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">💰 Revenue Wins:</span>
+            <span class="stat-value">0</span>
+        </div>
+    </div><table class="conflicts-table"><thead><tr><th>Code</th><th>Type</th><th>Conflict</th><th>Clinical</th><th>Revenue</th><th>Winner</th><th>Resolution</th></tr></thead><tbody>
+            <tr>
+                <td class="code-cell">R06.2</td>
+                <td class="dim">ICD-10</td>
+                <td class="dim">different_level</td>
+                <td>Included R06.2 with confidence 1.00</td>
+                <td>Included R06.2 with confidence 0.80</td>
+                <td><strong>🏥 Clinical</strong></td>
+                <td>Clinical agent wins due to higher confidence level</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">93458</td>
+                <td class="dim">CPT</td>
+                <td class="dim">different_code</td>
+                <td>Coded 93458 with confidence 1.00</td>
+                <td>Coded 93555 with confidence 1.00</td>
+                <td><strong>🏥 Clinical</strong></td>
+                <td>Clinical agent wins due to direct mention of &#39;coronary angiography&#39;</td>
+            </tr>
+            
+            <tr>
+                <td class="code-cell">J0180</td>
+                <td class="dim">HCPCS</td>
+                <td class="dim">units_differ</td>
+                <td>Coded J0180 x1 with confidence 1.00</td>
+                <td>Coded J0180 x30 with confidence 1.00</td>
+                <td><strong>🏥 Clinical</strong></td>
+                <td>Clinical agent wins due to ambiguity in units</td>
+            </tr>
+            </tbody></table>
+        
+        <!-- Final Codes -->
+        <h2 class="section-header">📋 Final Resolved Codes (Post-Debate)</h2>
+        
+        <h3 class="section-title">ICD-10-CM Codes</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Type</th><th>Confidence</th></tr></thead><tbody><tr><td class="code-cell">I21.9</td><td>Acute myocardial infarction, unspecified</td><td>principal</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">E11.9</td><td>Type 2 diabetes mellitus without complications</td><td>secondary</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">I10</td><td>Essential (primary) hypertension</td><td>secondary</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">R06.2</td><td>Shortness of breath</td><td>additional</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr></tbody></table>
+        
+        <h3 class="section-title">CPT Codes</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Units</th><th>Confidence</th></tr></thead><tbody><tr><td class="code-cell">92928</td><td>Percutaneous coronary intervention, coronary artery; with stent</td><td class="center">1</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">93000</td><td>Electrocardiogram, routine ECG with at least 12 leads; with interpretation and report</td><td class="center">1</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr><tr><td class="code-cell">93458</td><td>Coronary angiography, left heart catheterization</td><td class="center">1</td><td>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 100%; background-color: #22c55e;"></div>
+        <span class="score-text">100%</span>
+    </div>
+    </td></tr></tbody></table>
+        
+        <h3 class="section-title">HCPCS Codes</h3><table class="codes-table"><thead><tr><th>Code</th><th>Description</th><th>Category</th><th>Units</th></tr></thead><tbody><tr><td class="code-cell">J0180</td><td>Aspirin, 325 mg</td><td>drug</td><td class="center">1</td></tr><tr><td class="code-cell">J1390</td><td>Atorvastatin, 10 mg</td><td>drug</td><td class="center">1</td></tr><tr><td class="code-cell">J2760</td><td>Metformin, 500 mg</td><td>drug</td><td class="center">1</td></tr><tr><td class="code-cell">J05</td><td>Lisinopril, 5 mg</td><td>drug</td><td class="center">1</td></tr></tbody></table>
+        
+        <!-- Human Codes Input -->
+        
+        
+        <!-- Comparison -->
+        
+        
+        <!-- Compliance -->
+        <h2 class="section-header">📋 Compliance & Risk Assessment</h2><div class="compliance-status" style="border-left: 4px solid #22c55e;"><strong style="color: #22c55e;">✅ COMPLIANT</strong><p>✓ All codes pass NCCI and MUE validation. ℹ 4 NCD coverage issue(s) noted. ⚠ 1 potentially missed code(s).</p></div>
+        
+        <!-- Audit Findings -->
+        <h2 class="section-header">🔍 Audit Findings</h2><table class="findings-table"><thead><tr><th>Type</th><th>Code</th><th>Finding</th><th>Severity</th><th>Recommendation</th></tr></thead><tbody><tr><td><strong>missing</strong></td><td class="code-cell">Z79.4</td><td>The patient&#39;s use of insulin was documented but not coded.</td><td><span style="color: #eab308; font-weight: bold;">MEDIUM</span></td><td>Add code Z79.4 for insulin use</td></tr><tr><td><strong>incorrect</strong></td><td class="code-cell">R06.2</td><td>Shortness of breath was documented as a reason for admission but not as a primary diagnosis or condition; it seems not to have an active treatment or a significant condition.</td><td><span style="color: #22c55e; font-weight: bold;">LOW</span></td><td>Review and revise coding for accuracy</td></tr><tr><td><strong>high_risk</strong></td><td class="code-cell">I21.9, 92928</td><td>The combination of acute myocardial infarction and percutaneous coronary intervention (PCI) with stent has high OIG or RAC audit risk.</td><td><span style="color: #ef4444; font-weight: bold;">HIGH</span></td><td>Verify documentation supports medical necessity and proper coding</td></tr></tbody></table>
+        
+        <!-- Justifications -->
+        <h2 class="section-header">💡 Code Justifications</h2><div class="justifications"><p><strong>I21.9:</strong> The patient&#39;s primary diagnosis of Acute Myocardial Infarction is best coded as I21.9, as the specific type of myocardial infarction is not further specified.</p><p><strong>E11.9:</strong> The patient&#39;s Type 2 Diabetes Mellitus without complications is coded as E11.9.</p><p><strong>I10:</strong> The patient&#39;s hypertension is coded as I10, which is the specific code for essential (primary) hypertension.</p><p><strong>R06.2:</strong> The patient&#39;s symptom of Shortness of Breath is coded as R06.2.</p><p><strong>92928:</strong> The patient&#39;s PCI procedure is coded as 92928, which is the specific code for PCI, coronary artery, with or without atherectomy.</p><p><strong>93000:</strong> The patient&#39;s ECG monitoring is coded as 93000, which is the specific code for a 12-lead ECG.</p><p><strong>93458:</strong> The patient&#39;s coronary angiography is coded as 93458, which is the specific code for a coronary angiography.</p><p><strong>J0180:</strong> The patient&#39;s Aspirin medication is coded as J0180.</p><p><strong>J1390:</strong> The patient&#39;s Atorvastatin medication is not directly referenced; however, assuming Atorvastatin is administered via injection/infusion, a corresponding HCPCS code should be verified; for oral forms not listed, consider alternatives.</p><p><strong>J2760:</strong> The patient&#39;s Lisinopril medication is not directly referenced; however, assuming Lisinopril is administered via injection/infusion, a corresponding HCPCS code should be verified; for oral forms not listed, consider alternatives.</p><p><strong>J05:</strong> The patient&#39;s Metformin medication is not directly referenced; however, assuming Metformin is administered via injection/infusion, a corresponding HCPCS code should be verified; for oral forms not listed, consider alternatives.</p></div>
+        
+        <!-- Scores -->
+        <h2 class="section-header">📊 Confidence & Risk Scores</h2><div class="scores-grid"><div class="score-section"><h3>Coding Confidence (higher is better)</h3><div class="score-item"><span>Overall Coding Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 91%; background-color: #22c55e;"></div>
+        <span class="score-text">91%</span>
+    </div>
+    </div><div class="score-item"><span>ICD-10 Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 91%; background-color: #22c55e;"></div>
+        <span class="score-text">91%</span>
+    </div>
+    </div><div class="score-item"><span>CPT Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 91%; background-color: #22c55e;"></div>
+        <span class="score-text">91%</span>
+    </div>
+    </div><div class="score-item"><span>HCPCS Confidence</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 91%; background-color: #22c55e;"></div>
+        <span class="score-text">91%</span>
+    </div>
+    </div></div><div class="score-section"><h3>Compliance Risk (lower is better)</h3>
+    <div class="score-item">
+        <span>Risk Score</span>
+        <div class="score-bar">
+            <div class="score-fill" style="width: 35%; background-color: #22c55e;"></div>
+            <span class="score-text">35%</span>
+        </div>
+    </div>
+    <div class="score-item">
+        <span>Risk Level</span>
+        <span style="color: #22c55e; font-weight: bold;">LOW</span>
+    </div>
+    <div class="score-item"><span>Clinical vs Revenue Agreement</span>
+    <div class="score-bar">
+        <div class="score-fill" style="width: 76%; background-color: #22c55e;"></div>
+        <span class="score-text">76%</span>
+    </div>
+    </div></div></div>
+        
+        <!-- Recommendations -->
+        <h2 class="section-header">🎯 Recommendations</h2><div class="recommendations"><ul><li>Consider missed codes: {&#39;description&#39;: &#39;Discharge day management&#39;, &#39;suggested_code&#39;: &#39;99238&#39;}</li><li>HIGH RISK – Verify documentation supports medical necessity and proper coding</li></ul></div>
+        
+        <!-- Audit Summary -->
+        <h2 class="section-header">📊 Audit Summary</h2><div class="audit-summary">Resolved conflicts between clinical and revenue agents on ICD-10, CPT, and HCPCS codes
+
+Automated audit completed. Review all high-severity findings before submission.</div>
+        
+        <div class="footer">
+            <p>Medical Coding AI System | Powered by Llama 4 Scout + LangGraph + ChromaDB</p>
+            <p>Report generated: 2026-03-27 20:47:14</p>
+            <p style="margin-top:20px;font-size:11px;color:#9ca3af;">This report contains comprehensive compliance analysis. Review all high-severity findings before claim submission.</p>
+        </div>
+    </div>
+</body>
+</html>
